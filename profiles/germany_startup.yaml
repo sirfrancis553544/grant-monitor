@@ -1,0 +1,23 @@
+country: DE
+company_size: startup
+max_days_to_deadline: 90
+
+keywords_include:
+  - AI
+  - Künstliche Intelligenz
+  - Innovation
+  - Forschung
+  - Entwicklung
+  - F&E
+  - Digitalisierung
+  - Klima
+  - Energie
+  - Cyber
+
+keywords_exclude:
+  - Schule
+  - Kindergarten
+  - Landwirtschaft
+  - Kultur
+
+top_n: 20

@@ -1,0 +1,25 @@
+country: EU
+company_size: startup
+max_days_to_deadline: 180
+
+keywords_include:
+  - startup
+  - SME
+  - innovation
+  - deep tech
+  - R&D
+  - accelerator
+  - grant
+  - equity
+  - blended finance
+  - climate
+  - energy
+  - cybersecurity
+  - AI
+
+keywords_exclude:
+  - procurement
+  - tender for supply
+  - school
+
+top_n: 10

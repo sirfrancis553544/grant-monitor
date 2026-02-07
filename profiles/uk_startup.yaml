@@ -1,0 +1,22 @@
+country: UK
+company_size: startup
+max_days_to_deadline: 180
+
+keywords_include:
+  - innovation
+  - competition
+  - R&D
+  - feasibility
+  - prototype
+  - net zero
+  - climate
+  - energy
+  - AI
+  - cyber
+
+keywords_exclude:
+  - procurement
+  - supply of
+  - school
+
+top_n: 10

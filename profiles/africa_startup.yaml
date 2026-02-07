@@ -1,0 +1,27 @@
+country: Africa
+company_size: startup
+max_days_to_deadline: 365
+
+keywords_include:
+  - startup
+  - entrepreneurship
+  - seed
+  - grant
+  - funding
+  - sustainable
+  - sustainability
+  - climate
+  - energy
+  - farming
+  - agriculture
+  - agritech
+  - food security
+  - water
+  - circular economy
+
+keywords_exclude:
+  - procurement
+  - tender
+  - school
+
+top_n: 10

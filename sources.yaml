@@ -1,0 +1,134 @@
+sources:
+  - id: foerderdatenbank_foerderprogramme
+    type: rss
+    url: "https://www.foerderdatenbank.de/FDB/DE/Service/RSS/Functions/foerderprogram_rssnewsfeed.xml"
+
+  - id: kfw_press
+    type: rss
+    url: "http://www.kfw.de/kfw/de/KfW-Konzern/Medien/RssPressDe.xml"
+
+  - id: kfw_news
+    type: rss
+    url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssNewsDe.xml"
+
+  - id: kfw_research
+    type: rss
+    url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssResearchDe.xml"
+
+  - id: berlin_ibb_programs
+    type: html
+    name: "IBB Förderprogramme"
+    funder: "Investitionsbank Berlin (IBB)"
+    location_scope: "Berlin"
+    themes: ["startup", "innovation", "sme"]
+    url: "https://www.ibb.de/de/foerderprogramme.html"
+
+  - id: berlin_ibb_programs
+    type: html
+    funder: "Investitionsbank Berlin (IBB)"
+    location_scope: "Berlin"
+    themes: ["startup", "innovation", "sme"]
+    url: "https://www.ibb.de/de/wirtschaftsfoerderung/foerderprogramme-a-z/foerderprogramme-a-z.html"
+  # --- EU (Bonus group) ---
+  - id: eu_funding_tenders_calls
+    name: EU Funding & Tenders – Calls
+    type: html
+    funder: European Commission
+    location_scope: EU
+    themes: ["grants", "SME", "innovation"]
+    url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals"
+    group: bonus
+
+  - id: eic_funding
+    name: European Innovation Council (EIC)
+    type: html
+    funder: European Innovation Council
+    location_scope: EU
+    themes: ["startup", "deeptech", "equity"]
+    url: "https://eic.ec.europa.eu/eic-funding-opportunities_en"
+    group: bonus
+
+  - id: eic_accelerator
+    name: eic_accelerator
+    type: custom
+    funder: "European Innovation Council (EIC)"
+    location_scope: "EU"
+    themes: ["startup", "deeptech", "grant", "equity"]
+    url: "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
+
+  # --- UK ---
+  - id: uk_innovate_competitions
+    name: Innovate UK Competitions
+    type: html
+    funder: Innovate UK (UKRI)
+    location_scope: EU
+    themes: ["R&D", "innovation"]
+    url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
+    group: bonus
+
+  - id: innovate_uk_competitions
+    name: innovate_uk_competitions
+    type: custom
+    funder: "Innovate UK"
+    location_scope: "UK"
+    themes: ["grant", "competition"]
+    url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
+
+  # --- France ---
+  - id: bpifrance_calls
+    name: Bpifrance – Appels à projets
+    type: html
+    funder: Bpifrance
+    location_scope: EU
+    themes: ["startup", "innovation"]
+    url: "https://www.bpifrance.fr/nos-appels-a-projets-concours"
+    group: bonus
+
+  # --- Netherlands ---
+  - id: rvo_subsidies
+    name: RVO – Subsidies & Financing
+    type: html
+    funder: RVO Netherlands
+    location_scope: EU
+    themes: ["SME", "sustainability"]
+    url: "https://english.rvo.nl/subsidies-financing"
+    group: bonus
+
+  # --- Africa ---
+  - id: tef_programme
+    name: Tony Elumelu Foundation
+    type: html
+    funder: Tony Elumelu Foundation
+    location_scope: Africa
+    themes: ["startup", "seed"]
+    url: "https://www.tonyelumelufoundation.org/tef-entrepreneurship-programme"
+    group: bonus
+
+  - id: aecf_opportunities
+    name: AECF Funding Opportunities
+    type: html
+    funder: Africa Enterprise Challenge Fund
+    location_scope: Africa
+    themes: ["challenge_fund", "SME"]
+    url: "https://www.aecfafrica.org/im-looking-to/see-aecfs-funding-opportunities/"
+    group: bonus
+
+  - id: gsma_innovation_fund
+    name: GSMA Innovation Fund
+    type: html
+    funder: GSMA
+    location_scope: Africa
+    themes: ["tech", "mobile"]
+    url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
+    group: bonus
+
+  - id: tef_entrepreneurship
+    name: tef_entrepreneurship
+    type: custom
+    funder: "Tony Elumelu Foundation (TEF)"
+    location_scope: "Africa"
+    themes: ["startup", "seed", "training"]
+    url: "https://www.tonyelumelufoundation.org/press-releases/apply-tef-entrepreneurship-programme-2026"
+    programme_url: "https://www.tonyelumelufoundation.org/tef-entrepreneurship-programme"
+
+
