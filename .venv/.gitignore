@@ -1,0 +1,14 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+# --- Local runtime (NEVER COMMIT) ---
+.venv/
+__pycache__/
+data/
+token.json
+credentials.json
+.env
+.env.local
+
+# Python junk
+*.pyc
+*.pyo
+
