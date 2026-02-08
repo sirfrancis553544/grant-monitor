@@ -1,20 +1,44 @@
 import os
-import requests
+import json
+import urllib.request
 
-def send_resend_email(subject: str, html: str, to_email: str):
-    api_key = os.environ["RESEND_API_KEY"]
-    email_from = os.environ["EMAIL_FROM"]
 
-    r = requests.post(
-        "https://api.resend.com/emails",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={
-            "from": email_from,
-            "to": [to_email],
-            "subject": subject,
-            "html": html,
+def _env(name: str) -> str:
+    v = os.environ.get(name)
+    if not v:
+        raise RuntimeError(f"Missing env var: {name}")
+    return v
+
+
+def send_email(subject: str, html: str, to_email: str, reply_to: str | None = None) -> dict:
+    api_key = _env("RESEND_API_KEY")
+    email_from = _env("EMAIL_FROM")
+
+    payload = {
+        "from": email_from,
+        "to": [to_email],
+        "subject": subject,
+        "html": html,
+    }
+    if reply_to:
+        payload["reply_to"] = reply_to
+
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url="https://api.resend.com/emails",
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         },
-        timeout=30,
     )
-    r.raise_for_status()
-    return r.json()
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        err = e.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"Resend error HTTP {e.code}: {err}") from e

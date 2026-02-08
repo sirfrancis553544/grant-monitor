@@ -5,6 +5,7 @@ from html import escape
 import json
 import csv
 from pathlib import Path
+from typing import Any, Dict, List, Union
 
 
 def _fmt_money(max_amt, currency="€"):
@@ -123,7 +124,9 @@ def _render_section(parts, heading, items, subheading=None):
 
     if items:
         for g in items:
-            parts.append(render_card(g))
+            # Guard: only render dict-like grants
+            if isinstance(g, dict):
+                parts.append(render_card(g))
     else:
         parts.append(
             '<div style="border:1px solid #e5e7eb;border-radius:14px;padding:16px;background:#ffffff">'
@@ -131,17 +134,37 @@ def _render_section(parts, heading, items, subheading=None):
         )
 
 
-def render_digest_html(sections: dict):
+def _normalize_sections(
+    sections: Union[Dict[str, List[dict]], List[dict], None]
+) -> Dict[str, List[dict]]:
     """
-    sections example:
-      {
-        "DE": [...],
-        "EU": [...],
-        "UK": [...],
-        "AFRICA": [...]
-      }
-    Renders Germany first, then a bonus block (EU + UK + Africa), each with its own heading.
+    Backwards-compatible normalizer:
+    - If sections is a dict => return as-is (safe defaults)
+    - If sections is a list => wrap into a single section (DE by default)
     """
+    if sections is None:
+        return {"DE": []}
+
+    if isinstance(sections, list):
+        # Single-pack mode: wrap into a dict so the existing renderer works
+        return {"DE": sections}
+
+    # Ensure values are lists (avoid None)
+    out: Dict[str, List[dict]] = {}
+    for k, v in (sections or {}).items():
+        out[str(k)] = v or []
+    return out
+
+
+def render_digest_html(sections):
+    """
+    Accepts either:
+      - dict: {"DE":[...], "EU":[...], ...}
+      - list: [ ... ]   (single-pack mode)
+    Renders Germany first, then a bonus block (EU + UK + Africa).
+    """
+    sections = _normalize_sections(sections)
+
     today = date.today().isoformat()
     de = sections.get("DE", []) or []
     eu = sections.get("EU", []) or []
@@ -205,10 +228,13 @@ def render_digest_html(sections: dict):
     return "".join(parts)
 
 
-def write_outputs(sections: dict, out_dir="data"):
+def write_outputs(sections, out_dir="data"):
     """
+    Accepts either:
+      - dict sections
+      - list (single pack)
     Writes:
-      - digest.json (the full sections dict)
+      - digest.json (the normalized sections dict)
       - digest.csv  (flattened rows with a 'section' column)
       - digest.html (rendered from sections)
     Returns: (json_path, csv_path, html_path)
@@ -220,9 +246,11 @@ def write_outputs(sections: dict, out_dir="data"):
     csv_path = out / "digest.csv"
     html_path = out / "digest.html"
 
-    # JSON (store sections)
+    normalized = _normalize_sections(sections)
+
+    # JSON (store normalized sections)
     json_path.write_text(
-        json.dumps(sections, ensure_ascii=False, indent=2),
+        json.dumps(normalized, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
@@ -244,14 +272,16 @@ def write_outputs(sections: dict, out_dir="data"):
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
-        for section_key, items in (sections or {}).items():
+        for section_key, items in (normalized or {}).items():
             for g in (items or []):
+                if not isinstance(g, dict):
+                    continue
                 row = {k: g.get(k) for k in cols if k != "section"}
                 row["section"] = section_key
                 w.writerow(row)
 
     # HTML
-    html = render_digest_html(sections)
+    html = render_digest_html(normalized)
     html_path.write_text(html, encoding="utf-8")
 
     return str(json_path), str(csv_path), str(html_path)

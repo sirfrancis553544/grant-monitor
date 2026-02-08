@@ -38,3 +38,12 @@ def generate_html(pack: str) -> tuple[str, int]:
 
     html = render_digest_html(picked)
     return html, len(picked)
+
+def generate_digest_for_pack(pack: str) -> tuple[str, str, int]:
+    pack = pack.upper().strip()
+    if pack not in PACK_TO_PROFILE:
+        raise ValueError(f"Unknown pack: {pack}")
+
+    html, n = generate_html(pack)
+    subject = f"RubixScout — {pack} Funding Digest"
+    return subject, html, n

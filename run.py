@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import argparse
 
-from gmail_send import send_html_email
+from services.email_resend import send_resend_email as send_html_email
 from reminders import get_due_soon, render_reminder_html
 
 from sources.berlin_ibb import fetch_berlin_ibb_programs

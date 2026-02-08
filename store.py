@@ -1,6 +1,11 @@
+import os
 import json
+import sqlite3
+from pathlib import Path
 from datetime import datetime, timezone
+
 from dedupe import make_fingerprint
+
 
 def _now_iso():
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -102,3 +107,51 @@ def upsert_grant(conn, g: dict) -> tuple[bool, bool]:
         conn.execute("UPDATE grants SET last_seen=? WHERE fingerprint=?", (now, fingerprint))
 
     return False, changed
+
+DEFAULT_DB_PATH = Path("data") / "grants.db"  # change if your DB filename differs
+
+
+def _get_db_path() -> str:
+    return os.environ.get("DB_PATH") or str(DEFAULT_DB_PATH)
+
+
+def get_all_grants(limit: int | None = None) -> list[dict]:
+    """
+    Reads from your SQLite 'grants' table (the schema you already use in upsert_grant).
+    Returns list[dict] that score.py expects.
+    """
+    db_path = _get_db_path()
+    if not Path(db_path).exists():
+        raise FileNotFoundError(
+            f"DB not found at {db_path}. Set DB_PATH env var or put DB at {DEFAULT_DB_PATH}."
+        )
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    q = """
+    SELECT
+      title, funder, summary, eligibility_notes, deadline_date,
+      funding_amount_min, funding_amount_max,
+      location_scope, themes, url, source, confidence_score, raw_snippet
+    FROM grants
+    ORDER BY last_seen DESC
+    """
+    if limit:
+        q += f" LIMIT {int(limit)}"
+
+    rows = conn.execute(q).fetchall()
+    conn.close()
+
+    out: list[dict] = []
+    for r in rows:
+        d = dict(r)
+        # themes stored as JSON string in DB
+        try:
+            d["themes"] = json.loads(d["themes"]) if d.get("themes") else []
+        except Exception:
+            d["themes"] = []
+
+        out.append(d)
+
+    return out

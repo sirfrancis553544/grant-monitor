@@ -1,27 +1,73 @@
 import os
-import requests
+import json
+import urllib.parse
+import urllib.request
 
-def supabase_get(path: str, params: dict | None = None):
-    url = os.environ["SUPABASE_URL"].rstrip("/") + "/rest/v1/" + path.lstrip("/")
-    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    headers = {
-        "apikey": key,
-        "Authorization": f"Bearer {key}",
-        "Accept": "application/json",
-    }
-    r = requests.get(url, headers=headers, params=params, timeout=30)
-    r.raise_for_status()
-    return r.json()
 
-def supabase_post(path: str, payload: dict):
-    url = os.environ["SUPABASE_URL"].rstrip("/") + "/rest/v1/" + path.lstrip("/")
-    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    headers = {
-        "apikey": key,
-        "Authorization": f"Bearer {key}",
+def _env(name: str) -> str:
+    v = os.environ.get(name)
+    if not v:
+        raise RuntimeError(f"Missing env var: {name}")
+    return v
+
+
+def _request(method: str, url: str, headers: dict, body: dict | None = None) -> dict | list | None:
+    data = None
+    if body is not None:
+        data = json.dumps(body).encode("utf-8")
+
+    req = urllib.request.Request(url=url, data=data, method=method)
+    for k, v in headers.items():
+        req.add_header(k, v)
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read().decode("utf-8").strip()
+            if not raw:
+                return None
+            return json.loads(raw)
+    except urllib.error.HTTPError as e:
+        err = e.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"HTTP {e.code} calling {url}: {err}") from e
+
+
+def _rest_headers() -> dict:
+    supabase_url = _env("SUPABASE_URL").rstrip("/")
+    service_key = _env("SUPABASE_SERVICE_ROLE_KEY")
+    return {
+        "apikey": service_key,
+        "Authorization": f"Bearer {service_key}",
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Prefer": "return=representation",
     }
-    r = requests.post(url, headers=headers, json=payload, timeout=30)
-    r.raise_for_status()
-    return r.json()
+
+
+def get_active_subscribers() -> list[dict]:
+    supabase_url = _env("SUPABASE_URL").rstrip("/")
+    headers = _rest_headers()
+
+    # status=active
+    qs = urllib.parse.urlencode({
+        "select": "id,email,pack,unsubscribe_token",
+        "status": "eq.active",
+    })
+    url = f"{supabase_url}/rest/v1/subscribers?{qs}"
+    data = _request("GET", url, headers)
+    return data if isinstance(data, list) else []
+
+
+def log_send(subscriber_id: str, pack: str, item_count: int, status: str = "ok", error: str | None = None) -> None:
+    supabase_url = _env("SUPABASE_URL").rstrip("/")
+    headers = _rest_headers()
+
+    payload = {
+        "subscriber_id": subscriber_id,
+        "pack": pack,
+        "item_count": int(item_count),
+        "status": status,
+        "error": error,
+    }
+
+    url = f"{supabase_url}/rest/v1/send_logs"
+    _request("POST", url, headers, payload)
