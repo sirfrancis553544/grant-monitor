@@ -3,17 +3,22 @@ name: Send Weekly Digests
 on:
   schedule:
     - cron: "0 8 * * MON"   # Mondays 08:00 UTC
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 15
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -26,6 +31,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          APP_URL: ${{ secrets.APP_URL }} # used for unsubscribe link, etc.
+          REPLY_TO: ${{ secrets.REPLY_TO }}
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
           python -m jobs.send_weekly
