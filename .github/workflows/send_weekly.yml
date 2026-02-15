@@ -2,7 +2,7 @@ name: Send Weekly Digests
 
 on:
   schedule:
-    - cron: "0 8 * * MON"   # Mondays 08:00 UTC
+    - cron: "0 8 * * MON"
   workflow_dispatch:
 
 jobs:
