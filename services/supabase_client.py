@@ -2,13 +2,14 @@ import os
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
 
 
 def _env(name: str) -> str:
     v = os.environ.get(name)
     if not v:
         raise RuntimeError(f"Missing env var: {name}")
-    return v
+    return v.strip()
 
 
 def _request(method: str, url: str, headers: dict, body: dict | None = None) -> dict | list | None:
@@ -32,13 +33,16 @@ def _request(method: str, url: str, headers: dict, body: dict | None = None) -> 
 
 
 def _rest_headers() -> dict:
-    supabase_url = _env("SUPABASE_URL").rstrip("/")
-    service_key = _env("SUPABASE_SERVICE_ROLE_KEY")
+    # We don't actually need supabase_url here, but leaving it is fine.
+    supabase_key = _env("SUPABASE_SERVICE_ROLE_KEY")
+
+    # ✅ This is the correct “common bug fix” header set:
     return {
-        "apikey": service_key,
-        "Authorization": f"Bearer {service_key}",
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}",
         "Content-Type": "application/json",
         "Accept": "application/json",
+        # Optional but fine to keep (PostgREST)
         "Prefer": "return=representation",
     }
 
@@ -47,17 +51,23 @@ def get_active_subscribers() -> list[dict]:
     supabase_url = _env("SUPABASE_URL").rstrip("/")
     headers = _rest_headers()
 
-    # status=active
     qs = urllib.parse.urlencode({
         "select": "id,email,pack,unsubscribe_token",
         "status": "eq.active",
     })
     url = f"{supabase_url}/rest/v1/subscribers?{qs}"
+
     data = _request("GET", url, headers)
     return data if isinstance(data, list) else []
 
 
-def log_send(subscriber_id: str, pack: str, item_count: int, status: str = "ok", error: str | None = None) -> None:
+def log_send(
+    subscriber_id: str,
+    pack: str,
+    item_count: int,
+    status: str = "ok",
+    error: str | None = None
+) -> None:
     supabase_url = _env("SUPABASE_URL").rstrip("/")
     headers = _rest_headers()
 
