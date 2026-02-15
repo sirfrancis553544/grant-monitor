@@ -33,6 +33,7 @@ def send_email(subject: str, html: str, to_email: str, reply_to: str | None = No
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
+            "User-Agent": "RubixScout/1.0 (+https://rubixscout.com) Python",
         },
     )
 
