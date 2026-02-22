@@ -38,7 +38,6 @@ def render_card(g):
     deadline = _fmt_deadline(g.get("deadline_date"))
     funding = _fmt_money(g.get("funding_amount_max"))
 
-    # Why (optional, subtle)
     why = g.get("_why")
     if isinstance(why, str):
         why_list = [why.strip()] if why.strip() else []
@@ -53,56 +52,81 @@ def render_card(g):
     if len(summary) > 280:
         summary = summary[:280].rsplit(" ", 1)[0] + "…"
 
-    # Chips
+    # pack label (optional)
+    pack = (g.get("section_label") or "").strip()  # if you ever pass it in
+    if not pack:
+        # fallback: show nothing; section header already exists
+        pack = ""
+
+    # chips line
     chips = []
     if funding:
-        chips.append(
-            '<span style="background:#EEF2FF;color:#3730A3;padding:4px 8px;'
-            'border-radius:999px;font-size:12px;font-weight:600;display:inline-block;margin-right:6px">'
-            f"Up to {escape(funding)}</span>"
-        )
+        chips.append(f"<span style='font-weight:800'>Up to {escape(funding)}</span>")
     if deadline:
-        chips.append(
-            '<span style="background:#ECFEFF;color:#155E75;padding:4px 8px;'
-            'border-radius:999px;font-size:12px;font-weight:600;display:inline-block">'
-            f"Deadline: {escape(deadline)}</span>"
-        )
-
-    chips_html = "".join(chips)
+        chips.append(f"Deadline: <span style='font-weight:800'>{escape(deadline)}</span>")
+    chips_html = " <span style='color:#d1d5db;margin:0 8px'>•</span> ".join(chips) if chips else ""
 
     why_html = ""
     if why_list:
         why_html = (
-            "<div style='margin-top:8px;color:#6B7280;font-size:12px'>"
-            "Why matched: "
+            "<div style='margin-top:10px;font-size:12px;line-height:1.5;color:#6b7280'>"
+            "<span style='font-weight:800;color:#374151'>Why matched:</span> "
             + ", ".join(escape(x) for x in why_list[:6])
             + "</div>"
         )
 
     return f"""
-    <div style="border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:16px;background:#ffffff">
-      <div style="font-size:16px;font-weight:750;margin-bottom:6px;line-height:1.25">
-        <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
-          {escape(title_txt)}
-        </a>
-      </div>
+<div style="border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;background:#ffffff;margin-bottom:16px">
+  <!-- IMAGE HEADER -->
+  <div style="
+    position:relative;
+    padding:16px;
+    background:
+      radial-gradient(120px 80px at 85% 30%, rgba(37,99,235,0.10), transparent 60%),
+      radial-gradient(140px 90px at 15% 70%, rgba(16,185,129,0.08), transparent 60%),
+      linear-gradient(135deg,#ffffff 0%,#f7f8fb 55%,#f3f4f6 100%);
+  ">
+    <div style="
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(to right, rgba(17,24,39,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(17,24,39,0.06) 1px, transparent 1px);
+      background-size:40px 40px;
+      opacity:0.35;
+    "></div>
 
-      <div style="margin-bottom:10px">{chips_html}</div>
-
-      <div style="color:#374151;font-size:14px;line-height:1.5;margin-bottom:12px">
-        {escape(summary)}
-      </div>
-
-      <a href="{escape(url)}" target="_blank" rel="noreferrer"
-         style="display:inline-block;padding:8px 14px;border-radius:10px;
-                background:#2563EB;color:white;font-weight:650;
-                font-size:14px;text-decoration:none">
-        Open application →
-      </a>
-
-      {why_html}
+    <div style="position:relative;z-index:2">
+      <span style="display:inline-block;font-size:12px;font-weight:700;color:#111827;background:rgba(255,255,255,0.90);border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px">
+        🔒 Subscribers only
+      </span>
     </div>
-    """
+
+    <div style="position:relative;z-index:2;margin-top:12px;font-size:18px;font-weight:900;line-height:1.25;color:#111827">
+      <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
+        {escape(title_txt)}
+      </a>
+    </div>
+
+    {"<div style='position:relative;z-index:2;margin-top:10px;font-size:12px;color:#374151'>" + chips_html + "</div>" if chips_html else ""}
+  </div>
+
+  <!-- BODY -->
+  <div style="padding:16px">
+    <div style="font-size:14px;line-height:1.6;color:#374151">
+      {escape(summary)}
+    </div>
+
+    <div style="margin-top:12px">
+      <a href="{escape(url)}" target="_blank" rel="noreferrer"
+         style="display:inline-block;padding:10px 14px;border-radius:12px;background:#2563EB;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
+        Apply now →
+      </a>
+    </div>
+
+    {why_html}
+  </div>
+</div>
+"""
 
 
 def _render_section(parts, heading, items, subheading=None):
@@ -162,9 +186,6 @@ def render_digest_html(sections):
       - dict: {"DE":[...], "EU":[...], ...}
       - list: [ ... ]   (single-pack mode)
     Renders Germany first, then a bonus block (EU + UK + Africa).
-    <div style="margin-top:6px;font-size:12px;color:#93c5fd">
-  TEMPLATE VERSION: 2026-02-22 TEST
-</div>
     """
     sections = _normalize_sections(sections)
 
