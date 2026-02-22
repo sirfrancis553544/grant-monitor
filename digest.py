@@ -162,6 +162,9 @@ def render_digest_html(sections):
       - dict: {"DE":[...], "EU":[...], ...}
       - list: [ ... ]   (single-pack mode)
     Renders Germany first, then a bonus block (EU + UK + Africa).
+    <div style="margin-top:6px;font-size:12px;color:#93c5fd">
+  TEMPLATE VERSION: 2026-02-22 TEST
+</div>
     """
     sections = _normalize_sections(sections)
 
