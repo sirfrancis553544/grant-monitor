@@ -49,7 +49,7 @@ def main():
             if unsub_url:
                 footer = f"""
                 <div style="margin-top:18px;color:#6b7280;font-size:12px;text-align:center">
-                  <a href="{unsub_url}" style="color:#6b7280;text-decoration:underline">Unsubscribe</a>
+                  <a href="{unsub_url}" style="color:#6b7280;text-decoration:underline">Unsubscribe yy</a>
                 </div>
                 """
 
