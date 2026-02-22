@@ -241,6 +241,7 @@ def render_digest_html(sections, unsubscribe_url: str = "https://rubixscout.com/
       </div>
     </div>
 """
+
 )
 
     # Germany first
@@ -267,29 +268,15 @@ def render_digest_html(sections, unsubscribe_url: str = "https://rubixscout.com/
 
         # Footer (always)
     parts.append(
-    f"""
-    <div style="margin-top:24px;border-top:1px solid #e5e7eb;padding-top:16px;color:#6b7280;font-size:12px;line-height:1.6">
-      <div style="font-weight:900;color:#111827">RubixScout</div>
-
-      <div style="margin-top:6px">
-        You’re receiving this weekly digest because you subscribed to grant alerts.
-      </div>
-
-      <div style="margin-top:10px">
-        <a href="https://rubixscout.com" style="color:#2563EB;text-decoration:none;font-weight:800">View site</a>
-        <span style="color:#d1d5db;margin:0 8px">•</span>
-        <a href="{escape(unsubscribe_url)}" style="color:#2563EB;text-decoration:none;font-weight:800">Unsubscribe</a>
-      </div>
-
-      <div style="margin-top:10px;color:#9ca3af">
-        Tip: Reply with keywords like “AI”, “Climate”, or “Berlin” to improve future matches.
-      </div>
+    """
+    <div style="margin-top:18px;color:#6b7280;font-size:12px;text-align:center">
+      RubixScout · New opportunities every week.
     </div>
   </div>
 </body>
 </html>
-    """
-    )
+"""
+)
 
     return "".join(parts)
 
