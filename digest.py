@@ -95,12 +95,6 @@ def render_card(g):
       opacity:0.35;
     "></div>
 
-    <div style="position:relative;z-index:2">
-      <span style="display:inline-block;font-size:12px;font-weight:700;color:#111827;background:rgba(255,255,255,0.90);border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px">
-        🔒 Subscribers only
-      </span>
-    </div>
-
     <div style="position:relative;z-index:2;margin-top:12px;font-size:18px;font-weight:900;line-height:1.25;color:#111827">
       <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
         {escape(title_txt)}
@@ -119,7 +113,7 @@ def render_card(g):
     <div style="margin-top:12px">
       <a href="{escape(url)}" target="_blank" rel="noreferrer"
          style="display:inline-block;padding:10px 14px;border-radius:12px;background:#2563EB;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
-        Apply now →
+       Open application →
       </a>
     </div>
 
@@ -180,7 +174,7 @@ def _normalize_sections(
     return out
 
 
-def render_digest_html(sections):
+def render_digest_html(sections, unsubscribe_url: str = "https://rubixscout.com/unsubscribe"):
     """
     Accepts either:
       - dict: {"DE":[...], "EU":[...], ...}
@@ -200,45 +194,54 @@ def render_digest_html(sections):
 
     parts = []
     parts.append(
-        f"""
-    <html>
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-    </head>
-    <body style="margin:0;padding:0;background:#f6f7fb;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827">
-      <div style="max-width:820px;margin:0 auto;padding:22px">
-        <div style="background:#111827;color:#ffffff;border-radius:16px;padding:18px 18px">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-    <div>
-      <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#93c5fd">
-        RubixScout · Weekly Grant Digest
+    f"""
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="margin:0;padding:0;background:#f6f7fb;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827">
+  <div style="max-width:820px;margin:0 auto;padding:22px">
+
+    <!-- HEADER (table layout = email safe) -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+      style="background:#111827;color:#ffffff;border-radius:16px;padding:18px 18px;border-collapse:separate">
+      <tr>
+        <td style="vertical-align:top;padding-right:12px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#93c5fd">
+            RubixScout · Weekly Grant Digest
+          </div>
+          <div style="margin-top:6px;font-size:20px;font-weight:900;line-height:1.15">
+            Hi — here are your best matches for {today}
+          </div>
+          <div style="margin-top:8px;font-size:13px;color:#d1d5db">
+            {total} opportunities · Prioritized by fit · Source links included
+          </div>
+        </td>
+
+        <td style="vertical-align:top;text-align:right;width:180px">
+          <div style="display:inline-block;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);padding:10px 12px;border-radius:12px">
+            <div style="font-size:12px;color:#e5e7eb;font-weight:800">Pack</div>
+            <div style="margin-top:2px;font-size:13px;font-weight:900;color:#ffffff;white-space:nowrap">
+              Germany + Bonus
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- INTRO (replaces “How to use this email”) -->
+    <div style="margin-top:14px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">
+      <div style="font-size:14px;font-weight:900;color:#111827">
+        Quick note 👋
       </div>
-      <div style="margin-top:6px;font-size:20px;font-weight:900;line-height:1.1">
-        Your matches for {today}
-      </div>
-      <div style="margin-top:8px;font-size:13px;color:#d1d5db">
-        {total} opportunities · Prioritized by fit · Source links included
+      <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#374151">
+        I’ve curated this week’s opportunities for your pack. Open the source link to verify eligibility and apply fast.
+        “Why matched” explains why each one showed up.
       </div>
     </div>
-
-    <div style="text-align:right;min-width:140px">
-      <div style="display:inline-block;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.16);padding:8px 10px;border-radius:12px">
-        <div style="font-size:12px;color:#e5e7eb;font-weight:800">Pack</div>
-        <div style="margin-top:2px;font-size:13px;font-weight:900;color:#ffffff">Germany + Bonus</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div style="margin-top:14px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">
-  <div style="font-size:14px;font-weight:900;color:#111827">How to use this email</div>
-  <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#374151">
-    Skim the first lines, open the source link, and apply fast. “Why matched” explains why an opportunity was included.
-  </div>
-</div>
-    """
-    )
+"""
+)
 
     # Germany first
     _render_section(parts, "🇩🇪 Germany — best matches", de)
@@ -264,28 +267,28 @@ def render_digest_html(sections):
 
         # Footer (always)
     parts.append(
-        f"""
-        <div style="margin-top:24px;border-top:1px solid #e5e7eb;padding-top:16px;color:#6b7280;font-size:12px;line-height:1.6">
-          <div style="font-weight:900;color:#111827">RubixScout</div>
+    f"""
+    <div style="margin-top:24px;border-top:1px solid #e5e7eb;padding-top:16px;color:#6b7280;font-size:12px;line-height:1.6">
+      <div style="font-weight:900;color:#111827">RubixScout</div>
 
-          <div style="margin-top:6px">
-            You’re receiving this weekly digest because you subscribed to grant alerts.
-          </div>
-
-          <div style="margin-top:10px">
-            <a href="https://rubixscout.com" style="color:#2563EB;text-decoration:none;font-weight:800">View site</a>
-            <span style="color:#d1d5db;margin:0 8px">•</span>
-            <a href="https://rubixscout.com/unsubscribe" style="color:#2563EB;text-decoration:none;font-weight:800">Unsubscribe</a>
-          </div>
-
-          <div style="margin-top:10px;color:#9ca3af">
-            Tip: Reply with keywords like “AI”, “Climate”, or “Berlin” to improve future matches.
-          </div>
-        </div>
+      <div style="margin-top:6px">
+        You’re receiving this weekly digest because you subscribed to grant alerts.
       </div>
-    </body>
-    </html>
-        """
+
+      <div style="margin-top:10px">
+        <a href="https://rubixscout.com" style="color:#2563EB;text-decoration:none;font-weight:800">View site</a>
+        <span style="color:#d1d5db;margin:0 8px">•</span>
+        <a href="{escape(unsubscribe_url)}" style="color:#2563EB;text-decoration:none;font-weight:800">Unsubscribe</a>
+      </div>
+
+      <div style="margin-top:10px;color:#9ca3af">
+        Tip: Reply with keywords like “AI”, “Climate”, or “Berlin” to improve future matches.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    """
     )
 
     return "".join(parts)
@@ -344,7 +347,7 @@ def write_outputs(sections, out_dir="data"):
                 w.writerow(row)
 
     # HTML
-    html = render_digest_html(normalized)
+    html = render_digest_html(normalized, unsubscribe_url="https://rubixscout.com/unsubscribe")    
     html_path.write_text(html, encoding="utf-8")
 
     return str(json_path), str(csv_path), str(html_path)
