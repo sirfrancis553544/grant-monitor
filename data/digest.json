@@ -1,6 +1,29 @@
 {
   "DE": [
     {
+      "title": "Förderung von Forschungs- und Entwicklungsprojekten zum Thema KI-basierte klimaneutrale Mobilitätssysteme (Hightech Agenda)",
+      "funder": "foerderdatenbank_foerderprogramme",
+      "summary": "Sie forschen zu Mobilität und Künstlicher Intelligenz (KI)? Das Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR) fördert Verbundprojekte in Modellregionen. Entwickeln Sie jetzt innovative Lösungen für einen klimaneutralen Verkehr und erhalten Sie Zuschüsse.",
+      "eligibility_notes": null,
+      "deadline_date": "2026-03-27",
+      "funding_amount_min": null,
+      "funding_amount_max": null,
+      "location_scope": "DE",
+      "themes": "[]",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMBF/ki-klimaneutrale-mobilitaet.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "source": "foerderdatenbank_foerderprogramme",
+      "date_found": "2026-02-24T18:13:02+00:00",
+      "confidence_score": 0.8,
+      "fingerprint": "a64e70c74cb229a605e04427acbbfa29ed86d6c5",
+      "_score": 7,
+      "_why": [
+        "title match: forschung",
+        "title match: entwicklung",
+        "title match: klima",
+        "scope includes DE"
+      ]
+    },
+    {
       "title": "Förderung im Rahmen von EU-LIFE – Programm für die Umwelt und Klimapolitik (2021 – 2027)",
       "funder": "foerderdatenbank_foerderprogramme",
       "summary": "Das Programm LIFE bildet die Grundlage für Maßnahmen zur Förderung des Umwelt- und Klimaschutzes durch die Europäische Union in den Jahren 2021 bis 2027. Wenn Sie ein konkretes Vorhaben in einem Bereich wie Arten- und Biotopschutz, biologische Vielfalt, Boden, Wälder, Klimaschutz, Klimaanpassung, Energieeffizienz, erneuerbare Energien, Energiewende, Luftqualität, Kreislaufwirtschaft, Ressourceneffizienz, Chemikalien, Lärm, Wasser oder Abfall planen, können Sie unter bestimmten Umständen eine Förderung erhalten.",
@@ -14,6 +37,7 @@
       "source": "foerderdatenbank_foerderprogramme",
       "date_found": "2026-01-17T18:45:58+00:00",
       "confidence_score": 0.7,
+      "fingerprint": "24106cad559b0f236d6aeadb8169b3adea2a28f1",
       "_score": 4,
       "_why": [
         "title match: klima",
@@ -35,6 +59,7 @@
       "source": "berlin_ibb_programs",
       "date_found": "2026-01-18T13:22:48+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "53192930d748dc09e3648ab1f602db0d9fdc5eee",
       "_score": 2,
       "_why": [
         "title match: innovation"
@@ -54,116 +79,78 @@
       "source": "berlin_ibb_programs",
       "date_found": "2026-01-18T13:22:48+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "bdb0ea1f150f78540d668b6918480c7be0c0fcf5",
       "_score": 2,
       "_why": [
         "title match: innovation"
       ]
     },
     {
-      "title": "Förderung von Unternehmensgründungen (Startups) im Rahmen des Programms „GründungsBONUS Plus“",
+      "title": "Anteilige Finanzierung der Entwicklungskosten ziviler Luftfahrzeughersteller und Luftfahrtausrüster (Luftfahrt-Entwicklungs-Darlehen)",
       "funder": "foerderdatenbank_foerderprogramme",
-      "summary": "Wenn Sie als Berliner Existenzgründerin und Existenzgründer oder als Start-up die Entwicklung, Umsetzung und Marktetablierung innovativer und nachhaltiger Produkte und Dienstleistungen planen, können Sie mit dem GründungsBONUS Plus einen Zuschuss erhalten.",
+      "summary": "Wenn Sie als Luftfahrtunternehmen im Bereich der zivilen kommerziellen Luftfahrt forschen und entwickeln, können Sie unter bestimmten Voraussetzungen ein Darlehen erhalten.",
       "eligibility_notes": null,
-      "deadline_date": "2027-09-30",
+      "deadline_date": "2028-12-31",
       "funding_amount_min": null,
-      "funding_amount_max": 50000.0,
+      "funding_amount_max": 25000000.0,
       "location_scope": "DE",
       "themes": "[]",
-      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Berlin/gruendungsbonusplus-unterstuetzung-aufbau-startup.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMWi/luftfahrt-entwicklungs-darlehen.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
       "source": "foerderdatenbank_foerderprogramme",
-      "date_found": "2026-01-21T19:37:33+00:00",
+      "date_found": "2026-02-23T20:44:04+00:00",
       "confidence_score": 0.9,
-      "_score": 1,
+      "fingerprint": "1b0ddf3fa78d61b61ccb57bc4d2a54e8912c9a4a",
+      "_score": 2,
       "_why": [
-        "summary match: entwicklung",
+        "title match: entwicklung",
         "scope includes DE",
         "deadline beyond 90d"
       ]
     },
     {
-      "title": "LastenradPLUS",
-      "funder": "Investitionsbank Berlin (IBB)",
-      "summary": "",
-      "eligibility_notes": "Antragsberechtigt sind Berliner Unternehmen, Vereine und selbständig Tätige, die das Lastenrad im innerstädtischen Berliner Verkehr nutzen möchten \"LastenradPLUS\" im Detail Wer wird gefördert? Antragsberechtigt sind in Berlin tätige Unternehmen, selbstständig Tätige und Vereine, die mindestens ein gewerblich, gemeinnützig oder freiberuflich genutzt",
-      "deadline_date": null,
+      "title": "Beratungsleistungen für kleine und mittlere Unternehmen zur Gestaltung einer mitarbeiterorientierten und zukunftsgerechten Personalpolitik und zur Förderung von Innovationsfähigkeit unter Einbeziehung der Beschäftigten (INQA-Coaching)",
+      "funder": "foerderdatenbank_foerderprogramme",
+      "summary": "Wenn Sie als kleines oder mittleres Unternehmen vor aktuellen Herausforderungen wie fehlenden Fachkräften, veralteten Prozessen oder einer verzögerten Digitalisierung stehen, können Sie einen Zuschuss für ein begleitendes Coaching erhalten. Dieses Coaching unterstützt Ihr Unternehmen dabei, sich zukunftssicher aufzustellen.",
+      "eligibility_notes": null,
+      "deadline_date": "2024-04-11",
       "funding_amount_min": null,
-      "funding_amount_max": 2000.0,
-      "location_scope": "Berlin",
-      "themes": "[\"startup\", \"innovation\", \"sme\"]",
-      "url": "https://www.ibb.de/de/foerderprogramme/lastenradplus.html",
-      "source": "berlin_ibb_programs",
-      "date_found": "2026-01-18T13:22:48+00:00",
-      "confidence_score": 0.5,
-      "_score": 0,
-      "_why": []
+      "funding_amount_max": 50000000.0,
+      "location_scope": "DE",
+      "themes": "[]",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMAS/inqa-coaching-2.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "source": "foerderdatenbank_foerderprogramme",
+      "date_found": "2026-02-23T20:44:01+00:00",
+      "confidence_score": 0.9,
+      "fingerprint": "16ccd22e944de5422e1dae73d0374587dad8f6f7",
+      "_score": 2,
+      "_why": [
+        "title match: innovation",
+        "summary match: digitalisierung",
+        "scope includes DE",
+        "deadline passed"
+      ]
     },
     {
-      "title": "Auftragsvorfinanzierung zur Pandemieeindämmung",
-      "funder": "Investitionsbank Berlin (IBB)",
-      "summary": "",
-      "eligibility_notes": "Wer wird gefördert? Kleine und mittlere Unternehmen (KMU) mit Sitz oder Betriebsstätte in Berlin. Dazu zählen auch gemeinnützige Unternehmen im Rahmen ihrer gewerblichen Tätigkeit. Ausgeschlossen sind Unternehmen, die sich bereits seit 31.12.2019 in (wirtschaftlichen) Schwierigkeiten befinden. Was wird gefördert?",
-      "deadline_date": "rolling",
+      "title": "Förderung für Projekte zur Strukturentwicklung im Lausitzer Braunkohlerevier",
+      "funder": "foerderdatenbank_foerderprogramme",
+      "summary": "Sie wollen im brandenburgischen Bereich des Lausitzer Braunkohlereviers zur Bewältigung des Strukturwandels und zur Sicherung der Beschäftigung beitragen? Das Land Brandenburg fördert Ihre Projekte mit bis zu 90 Prozent.",
+      "eligibility_notes": null,
+      "deadline_date": "2038-12-31",
       "funding_amount_min": null,
-      "funding_amount_max": null,
-      "location_scope": "Berlin",
-      "themes": "[\"startup\", \"innovation\", \"sme\"]",
-      "url": "https://www.ibb.de/de/foerderprogramme/auftragsvorfinanzierung-zur-pandemieeindaemmung.html",
-      "source": "berlin_ibb_programs",
-      "date_found": "2026-01-18T13:22:48+00:00",
-      "confidence_score": 0.5,
-      "_score": 0,
-      "_why": []
-    },
-    {
-      "title": "Abbiegeassistent Berlin",
-      "funder": "Investitionsbank Berlin (IBB)",
-      "summary": "",
-      "eligibility_notes": "Antragsberechtigt sind: Eigentümer:innen, Halter:innen, Leasingnehmer:innnen und Mieter:innen von in der Bundesrepublik Deutschland im Verkehr auf öffentlichen Straßen zugelassenen Lastkraftwagen Die Lkw müssen im Land Berlin für die Ausübung gewerblicher, freiberuflicher oder gemeinnütziger Tätigkeit betrieben werden. Wer wird nicht gefördert?",
-      "deadline_date": null,
-      "funding_amount_min": null,
-      "funding_amount_max": 1500.0,
-      "location_scope": "Berlin",
-      "themes": "[\"startup\", \"innovation\", \"sme\"]",
-      "url": "https://www.ibb.de/de/foerderprogramme/abbiegeassistent-berlin.html",
-      "source": "berlin_ibb_programs",
-      "date_found": "2026-01-18T13:22:48+00:00",
-      "confidence_score": 0.5,
-      "_score": 0,
-      "_why": []
-    },
-    {
-      "title": "zum Förderprogramm \"Zwischenfinanzierung von Filmproduktionen\"",
-      "funder": "Investitionsbank Berlin (IBB)",
-      "summary": "",
-      "eligibility_notes": "Wer wird gefördert? Produktionsunternehmen mit Sitz in Berlin oder Brandenburg deutsche Produktionsgesellschaften (auch innerhalb einer internationalen Koproduktionsgemeinschaft) mit Projekt in Berlin oder Brandenburg Gründungsunternehmen mit ausreichender Produktionserfahrung (Budgeterfahrung, erfolgreiche Projekte)",
-      "deadline_date": null,
-      "funding_amount_min": null,
-      "funding_amount_max": 3750000.0,
-      "location_scope": "Berlin",
-      "themes": "[\"startup\", \"innovation\", \"sme\"]",
-      "url": "https://www.ibb.de/de/foerderprogramme/zwischenfinanzierung-von-filmproduktionen.html",
-      "source": "berlin_ibb_programs",
-      "date_found": "2026-01-18T13:22:48+00:00",
-      "confidence_score": 0.5,
-      "_score": 0,
-      "_why": []
-    },
-    {
-      "title": "zum Förderprogramm \"Wirtschaftsnahe Elektromobilität (WELMO)\"",
-      "funder": "Investitionsbank Berlin (IBB)",
-      "summary": "",
-      "eligibility_notes": "antragsberechtigt ist, wer über das Förderprogramm SolarPLUS eine Förderung erhält bzw. erhalten hat. Eine Beantragung ist für Antragsteller:innen möglich, die eine Förderung aus dem Programm SolarPLUS für einen Stromspeicher (Modul C) und/oder Sonderanlagen-Boni (Modul D1, D2, D3) erhalten haben. Für die Beantragung von Fahrzeugen der Klasse M1, M",
-      "deadline_date": null,
-      "funding_amount_min": null,
-      "funding_amount_max": 55000.0,
-      "location_scope": "Berlin",
-      "themes": "[\"startup\", \"innovation\", \"sme\"]",
-      "url": "https://www.ibb.de/de/foerderprogramme/wirtschaftsnahe-elektromobilitaet.html",
-      "source": "berlin_ibb_programs",
-      "date_found": "2026-01-18T13:22:48+00:00",
-      "confidence_score": 0.5,
-      "_score": 0,
-      "_why": []
+      "funding_amount_max": 25000.0,
+      "location_scope": "DE",
+      "themes": "[]",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Brandenburg/strukturentwicklung-lausitzer-kohlerevier.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "source": "foerderdatenbank_foerderprogramme",
+      "date_found": "2026-02-23T20:44:07+00:00",
+      "confidence_score": 0.9,
+      "fingerprint": "48631ac1f7aedced4af297ed5d65ece68eec2c3d",
+      "_score": 2,
+      "_why": [
+        "title match: entwicklung",
+        "scope includes DE",
+        "deadline beyond 90d"
+      ]
     }
   ],
   "EU": [
@@ -181,6 +168,7 @@
       "source": "eic_accelerator",
       "date_found": "2026-01-18T15:10:58+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "5f008390b593e555a2f6dbe48664eff01a0ee6a8",
       "_score": 12,
       "_why": [
         "title match: startup",
@@ -193,24 +181,24 @@
       ]
     },
     {
-      "title": "Cyber Security Academic Startup Accelerator Programme Y10 Phase 1",
+      "title": "TechLocal AI Professional Degree and Traineeship Accelerator",
       "funder": "Innovate UK",
-      "summary": "UK registered academic institutions can apply for a share of up to £800,000 to join the Cyber Security Academic Startup Accelerator Programme (CyberASAP). This funding is from the Department for Science, Innovation and Technology (DSIT). Eligibility This competition is open to single applicants and",
+      "summary": "UK academic institutions and education providers can apply for funding to develop initiatives that build industry ready AI professionals aligned to local skills demand. Funding of £7.8 million is provided by DSIT. Eligibility This competition is open to single applicants and collaborations. To lead",
       "eligibility_notes": "",
-      "deadline_date": "2026-02-11",
+      "deadline_date": "2026-03-18",
       "funding_amount_min": null,
-      "funding_amount_max": 800000.0,
+      "funding_amount_max": 7800000.0,
       "location_scope": "UK",
       "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2376/overview/1b9b9265-ca4b-4f8c-a0c2-577cb8713642",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2375/overview/6431359e-eb5c-4f76-b49d-299948107fbd",
       "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
+      "date_found": "2026-02-23T20:44:32+00:00",
       "confidence_score": 0.5,
-      "_score": 5,
+      "fingerprint": "b5fcd9df380f9a6c498a3609508850e71a98803e",
+      "_score": 4,
       "_why": [
-        "title match: startup",
-        "summary match: innovation",
-        "title match: accelerator"
+        "title match: accelerator",
+        "title match: ai"
       ]
     },
     {
@@ -227,6 +215,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "fd6005c347ccfc963f9ee75f7c77fef951f5a496",
       "_score": 3,
       "_why": [
         "summary match: sme",
@@ -234,136 +223,147 @@
       ]
     },
     {
-      "title": "Ofgem Strategic Innovation Fund Round 5 Discovery C5",
+      "title": "Cyber Security Academic Startup Accelerator Programme Y10 Phase 1",
       "funder": "Innovate UK",
-      "summary": "Organisations can apply for a share of up to £30 million exclusive of VAT, for collaborative Discovery Phase Projects that meet the Round 5 challenges. This funding is from the Ofgem Strategic Innovation Fund. Eligibility This competition is open to collaborations only. To lead a Discovery Phase Pro",
+      "summary": "UK registered academic institutions can apply for a share of up to £800,000 to join the Cyber Security Academic Startup Accelerator Programme (CyberASAP). This funding is from the Department for Science, Innovation and Technology (DSIT). Eligibility This competition is open to single applicants and",
       "eligibility_notes": "",
-      "deadline_date": "2026-02-25",
+      "deadline_date": "2026-02-11",
       "funding_amount_min": null,
-      "funding_amount_max": 30000000.0,
+      "funding_amount_max": 800000.0,
       "location_scope": "UK",
       "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2346/overview/e172ee7c-3050-4d47-bf11-235cfe76c1e1",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-19T20:44:49+00:00",
-      "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "title match: innovation"
-      ]
-    },
-    {
-      "title": "DRIVE35 Innovation Fund: Collaborate 2",
-      "funder": "Innovate UK",
-      "summary": "UK registered organisations can apply for a share of up to £33 million for late stage collaborative research and development projects. Your project will support the UK’s transition to zero emission vehicles and a pathway to a net zero automotive industry. Eligibility This competition is open to coll",
-      "eligibility_notes": "",
-      "deadline_date": "2026-03-18",
-      "funding_amount_min": null,
-      "funding_amount_max": 33000000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2350/overview/dbd41be3-14ea-4c83-8774-eb28a8703d57",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2376/overview/1b9b9265-ca4b-4f8c-a0c2-577cb8713642",
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
-      "_score": 2,
+      "fingerprint": "aa887c86305bbd4aa044875252733527f80d074e",
+      "_score": 3,
       "_why": [
-        "title match: innovation"
+        "title match: startup",
+        "summary match: innovation",
+        "title match: accelerator",
+        "deadline passed"
       ]
     },
     {
-      "title": "DRIVE35 Innovation Fund: Demonstrate 2",
+      "title": "Full ADOPT Grant: Round 6",
       "funder": "Innovate UK",
-      "summary": "UK registered organisations can apply for a share of up to £33 million for late stage demonstration research and development projects. Projects will support the UK’s transition to zero emission vehicles and a pathway to a net zero automotive industry. Eligibility This competition is open to single a",
+      "summary": "Farming, growing or forestry businesses based in England can apply for a share of up to £5 million for on-farm trial and demonstration projects, to improve adoption of new ideas or solutions in the agricultural sector. Eligibility This competition is open to collaborations only. To lead a project yo",
       "eligibility_notes": "",
-      "deadline_date": "2026-03-11",
+      "deadline_date": "2026-04-08",
       "funding_amount_min": null,
-      "funding_amount_max": 33000000.0,
+      "funding_amount_max": 5000000.0,
       "location_scope": "UK",
       "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2351/overview/349c38f5-5ed2-4cf4-a324-bda2d6cd1e67",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2385/overview/2343c344-807d-41a1-9551-05ac5420ba11",
       "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
+      "date_found": "2026-02-23T20:44:32+00:00",
       "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "title match: innovation"
-      ]
-    },
-    {
-      "title": "Energy catalyst round 11 – early stage",
-      "funder": "Innovate UK",
-      "summary": "Organisations can apply for a share of up to £7 million across the three strands of the competition. This is for energy access in ODA eligible countries in sub-Saharan Africa, South Asia, the Indo Pacific region and Latin America. Eligibility This competition is open to single applicants and collabo",
-      "eligibility_notes": "",
-      "deadline_date": "2026-03-25",
-      "funding_amount_min": null,
-      "funding_amount_max": 7000000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2362/overview/640b2f4e-8571-4aef-9e2a-67e35db3db77",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "title match: energy"
-      ]
-    },
-    {
-      "title": "Energy catalyst round 11 – late stage",
-      "funder": "Innovate UK",
-      "summary": "Organisations can apply for a share of up to £7 million across the three strands of the competition. This is for energy access in ODA eligible countries in sub-Saharan Africa, South Asia, the Indo Pacific region and Latin America. Eligibility This competition is open to collaborations only. To be el",
-      "eligibility_notes": "",
-      "deadline_date": "2026-03-25",
-      "funding_amount_min": null,
-      "funding_amount_max": 7000000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2364/overview/b9d4dedf-d22a-41d1-9ca2-6c5a279519be",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "title match: energy"
-      ]
-    },
-    {
-      "title": "Energy catalyst round 11 – mid stage",
-      "funder": "Innovate UK",
-      "summary": "Organisations can apply for a share of up to £7 million across the three strands of the competition. This is for energy access in ODA eligible countries in sub-Saharan Africa, South Asia, the Indo Pacific region and Latin America. Eligibility This competition is open to collaborations only. To be el",
-      "eligibility_notes": "",
-      "deadline_date": "2026-03-25",
-      "funding_amount_min": null,
-      "funding_amount_max": 7000000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2363/overview/9f759af1-3732-4d15-995d-053e28025d22",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "title match: energy"
-      ]
-    },
-    {
-      "title": "ADOPT Facilitator Support Grant: Round 6",
-      "funder": "Innovate UK",
-      "summary": "Farming, growing or forestry businesses based in England can apply for a grant of £2,500, to engage an external Project Facilitator to support the development of a Full ADOPT Grant application. Eligibility This competition is open to single applicants only. To lead a project your organisation must:",
-      "eligibility_notes": "",
-      "deadline_date": "2026-02-25",
-      "funding_amount_min": null,
-      "funding_amount_max": 2500.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2371/overview/471bfe91-9f9c-4086-a28a-15296f1957e2",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
+      "fingerprint": "9b0d4b91a27fde8a6b8513af8b04bdcb643e4539",
       "_score": 2,
       "_why": [
         "title match: grant"
+      ]
+    },
+    {
+      "title": "UK-Germany Collaborative Innovation for Quantum Technologies 2026",
+      "funder": "Innovate UK",
+      "summary": "UK registered organisations can apply for a share of up to £3 million for innovative projects in quantum. This funding is from Innovate UK, part of UK Research and Innovation (UKRI). Eligibility This competition is open to collaborations only. To lead a collaborative project your organisation must b",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-15",
+      "funding_amount_min": null,
+      "funding_amount_max": 3000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2392/overview/b8b93732-6326-4aed-9af3-334e4cc5ecc0",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "3f7a6a993836538a6be43768f0e53b75469d3b5b",
+      "_score": 2,
+      "_why": [
+        "title match: innovation"
+      ]
+    },
+    {
+      "title": "Advancing innovation in drug and alcohol addiction healthcare",
+      "funder": "Innovate UK",
+      "summary": "Organisations can apply for a share of £20 million across two competitions. Projects will advance development of pharmaceutical, digital and MedTech tools to improve treatment recovery and prevention of harm and deaths from drug and alcohol addictions. Eligibility This competition is open to collabo",
+      "eligibility_notes": "",
+      "deadline_date": "2026-05-06",
+      "funding_amount_min": null,
+      "funding_amount_max": 20000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2394/overview/33b56af8-353f-46ac-bb66-a0928731c0fc",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "072bc053dc6e82703b347ccc0e32073c8bd6543c",
+      "_score": 2,
+      "_why": [
+        "title match: innovation"
+      ]
+    },
+    {
+      "title": "Contracts for Innovation in drug and alcohol addiction healthcare",
+      "funder": "Innovate UK",
+      "summary": "Organisations can apply for a share of £20 million, inclusive of VAT. Projects will advance development of pharmaceutical, digital and MedTech tools to improve treatment, recovery and prevention of harm and deaths for drug and alcohol addictions. Eligibility To lead a project, you can: be an organis",
+      "eligibility_notes": "",
+      "deadline_date": "2026-05-06",
+      "funding_amount_min": null,
+      "funding_amount_max": 20000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2395/overview/3d49fbc4-6e09-4dd8-9ac8-8e5f88facd8d",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "01002514c9c3b2fb24132c62473a50c0c4e67315",
+      "_score": 2,
+      "_why": [
+        "title match: innovation"
+      ]
+    },
+    {
+      "title": "Semiconductors and components for smart electronic platforms",
+      "funder": "Innovate UK",
+      "summary": "UK registered businesses can apply with CR&D or R&D projects for a share of up to £18.5 million to mature and accelerate the availability of components that include semiconductors or novel technologies ready for integration into Smart Electronic Platforms Eligibility This competition is open to sing",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-01",
+      "funding_amount_min": null,
+      "funding_amount_max": 18500000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2403/overview/4b54c133-c9b2-4572-9cca-2a7a4f69e5b8",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "1241f025fb242929a2e1b2a7ff59264153348a03",
+      "_score": 2,
+      "_why": [
+        "summary match: r&d",
+        "summary match: ai"
+      ]
+    },
+    {
+      "title": "Contracts for Innovation: industrial human relevant drug models",
+      "funder": "Innovate UK",
+      "summary": "Organisations can apply for a share of £2 million, inclusive of VAT, to develop and commercialise non‑animal methods for assessing the pre‑clinical pharmacokinetics and cardiovascular safety of new medicines. Eligibility To lead a project, you can: be an organisation of any size, including those bas",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-15",
+      "funding_amount_min": null,
+      "funding_amount_max": 2000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2396/overview/d55398bb-ff62-43b9-9ee1-bf3fa4b95c5c",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "46dbee09d88ffcb8c8ff51a802fa909497a3f640",
+      "_score": 2,
+      "_why": [
+        "title match: innovation"
       ]
     }
   ],
@@ -382,6 +382,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "0f55f3da7b2010d3e2634431f959568bbdde24f8",
       "_score": 5,
       "_why": [
         "title match: innovation",
@@ -404,6 +405,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "2b3df1c18bffffa4a84be4554b17f7f4830fa7e8",
       "_score": 5,
       "_why": [
         "title match: innovation",
@@ -413,24 +415,91 @@
       ]
     },
     {
-      "title": "Cyber Security Academic Startup Accelerator Programme Y10 Phase 1",
+      "title": "UK-Germany Collaborative Innovation for Quantum Technologies 2026",
       "funder": "Innovate UK",
-      "summary": "UK registered academic institutions can apply for a share of up to £800,000 to join the Cyber Security Academic Startup Accelerator Programme (CyberASAP). This funding is from the Department for Science, Innovation and Technology (DSIT). Eligibility This competition is open to single applicants and",
+      "summary": "UK registered organisations can apply for a share of up to £3 million for innovative projects in quantum. This funding is from Innovate UK, part of UK Research and Innovation (UKRI). Eligibility This competition is open to collaborations only. To lead a collaborative project your organisation must b",
       "eligibility_notes": "",
-      "deadline_date": "2026-02-11",
+      "deadline_date": "2026-04-15",
       "funding_amount_min": null,
-      "funding_amount_max": 800000.0,
+      "funding_amount_max": 3000000.0,
       "location_scope": "UK",
       "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2376/overview/1b9b9265-ca4b-4f8c-a0c2-577cb8713642",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2392/overview/b8b93732-6326-4aed-9af3-334e4cc5ecc0",
       "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
+      "date_found": "2026-02-23T20:44:32+00:00",
       "confidence_score": 0.5,
-      "_score": 5,
+      "fingerprint": "3f7a6a993836538a6be43768f0e53b75469d3b5b",
+      "_score": 4,
       "_why": [
-        "summary match: innovation",
+        "title match: innovation",
         "summary match: competition",
-        "title match: cyber",
+        "scope includes UK"
+      ]
+    },
+    {
+      "title": "Advancing innovation in drug and alcohol addiction healthcare",
+      "funder": "Innovate UK",
+      "summary": "Organisations can apply for a share of £20 million across two competitions. Projects will advance development of pharmaceutical, digital and MedTech tools to improve treatment recovery and prevention of harm and deaths from drug and alcohol addictions. Eligibility This competition is open to collabo",
+      "eligibility_notes": "",
+      "deadline_date": "2026-05-06",
+      "funding_amount_min": null,
+      "funding_amount_max": 20000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2394/overview/33b56af8-353f-46ac-bb66-a0928731c0fc",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "072bc053dc6e82703b347ccc0e32073c8bd6543c",
+      "_score": 4,
+      "_why": [
+        "title match: innovation",
+        "summary match: competition",
+        "scope includes UK"
+      ]
+    },
+    {
+      "title": "Semiconductors and components for smart electronic platforms",
+      "funder": "Innovate UK",
+      "summary": "UK registered businesses can apply with CR&D or R&D projects for a share of up to £18.5 million to mature and accelerate the availability of components that include semiconductors or novel technologies ready for integration into Smart Electronic Platforms Eligibility This competition is open to sing",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-01",
+      "funding_amount_min": null,
+      "funding_amount_max": 18500000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2403/overview/4b54c133-c9b2-4572-9cca-2a7a4f69e5b8",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "1241f025fb242929a2e1b2a7ff59264153348a03",
+      "_score": 4,
+      "_why": [
+        "summary match: competition",
+        "summary match: r&d",
+        "summary match: ai",
+        "scope includes UK"
+      ]
+    },
+    {
+      "title": "TechLocal AI Professional Degree and Traineeship Accelerator",
+      "funder": "Innovate UK",
+      "summary": "UK academic institutions and education providers can apply for funding to develop initiatives that build industry ready AI professionals aligned to local skills demand. Funding of £7.8 million is provided by DSIT. Eligibility This competition is open to single applicants and collaborations. To lead",
+      "eligibility_notes": "",
+      "deadline_date": "2026-03-18",
+      "funding_amount_min": null,
+      "funding_amount_max": 7800000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2375/overview/6431359e-eb5c-4f76-b49d-299948107fbd",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "b5fcd9df380f9a6c498a3609508850e71a98803e",
+      "_score": 4,
+      "_why": [
+        "summary match: competition",
+        "title match: ai",
         "scope includes UK"
       ]
     },
@@ -448,6 +517,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-19T20:44:49+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "f543966bbd05185e08ea23fdc5dfba9f0ac9a2a0",
       "_score": 4,
       "_why": [
         "title match: innovation",
@@ -469,6 +539,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "22074940cb5ccd7c09e98a74bbf7334bcb6d171e",
       "_score": 4,
       "_why": [
         "summary match: competition",
@@ -490,6 +561,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "2d8c8adfbe27c47366deb6516f2698d99d26a5e7",
       "_score": 4,
       "_why": [
         "summary match: competition",
@@ -511,71 +583,11 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "8013d2e491a5c534e30dc292b65636345a9f101e",
       "_score": 4,
       "_why": [
         "summary match: competition",
         "title match: energy",
-        "scope includes UK"
-      ]
-    },
-    {
-      "title": "Innovate UK Innovation Loans Round 25",
-      "funder": "Innovate UK",
-      "summary": "UK registered micro, small or medium sized enterprises (SME) can apply for loans for close to market innovative projects with strong commercial potential. They must significantly improve the UK economy and drive societal benefit. Eligibility This competition is open to single applicants from micro,",
-      "eligibility_notes": "",
-      "deadline_date": "2026-03-04",
-      "funding_amount_min": null,
-      "funding_amount_max": null,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2373/overview/609dc5dd-d3e8-4f51-af3a-3eb1b3314710",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 4,
-      "_why": [
-        "title match: innovation",
-        "summary match: competition",
-        "scope includes UK"
-      ]
-    },
-    {
-      "title": "Commercialising Knowledge Assets Fund (CKAF) Spring",
-      "funder": "Innovate UK",
-      "summary": "UK registered government research organisations can apply for grants from £50,000 up to £250,000 to move viable public sector knowledge assets towards commercial readiness. This funding is provided by the Government Office for Technology Transfer (GOTT). Eligibility This competition is open to singl",
-      "eligibility_notes": "",
-      "deadline_date": "2026-05-07",
-      "funding_amount_min": null,
-      "funding_amount_max": 50000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2369/overview/abf7d399-81b9-4f33-b592-51825a288c37",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "summary match: competition",
-        "scope includes UK"
-      ]
-    },
-    {
-      "title": "ADOPT Facilitator Support Grant: Round 6",
-      "funder": "Innovate UK",
-      "summary": "Farming, growing or forestry businesses based in England can apply for a grant of £2,500, to engage an external Project Facilitator to support the development of a Full ADOPT Grant application. Eligibility This competition is open to single applicants only. To lead a project your organisation must:",
-      "eligibility_notes": "",
-      "deadline_date": "2026-02-25",
-      "funding_amount_min": null,
-      "funding_amount_max": 2500.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2371/overview/471bfe91-9f9c-4086-a28a-15296f1957e2",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 2,
-      "_why": [
-        "summary match: competition",
         "scope includes UK"
       ]
     }
@@ -595,6 +607,7 @@
       "source": "eic_accelerator",
       "date_found": "2026-01-18T15:10:58+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "5f008390b593e555a2f6dbe48664eff01a0ee6a8",
       "_score": 5,
       "_why": [
         "title match: startup",
@@ -616,11 +629,33 @@
       "source": "tef_entrepreneurship",
       "date_found": "2026-01-18T15:11:01+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "5b22027fd59ce9e82a93abd6b7354400a9975eef",
       "_score": 4,
       "_why": [
         "title match: entrepreneurship",
         "summary match: seed",
         "scope includes AFRICA"
+      ]
+    },
+    {
+      "title": "Full ADOPT Grant: Round 6",
+      "funder": "Innovate UK",
+      "summary": "Farming, growing or forestry businesses based in England can apply for a share of up to £5 million for on-farm trial and demonstration projects, to improve adoption of new ideas or solutions in the agricultural sector. Eligibility This competition is open to collaborations only. To lead a project yo",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-08",
+      "funding_amount_min": null,
+      "funding_amount_max": 5000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2385/overview/2343c344-807d-41a1-9551-05ac5420ba11",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-23T20:44:32+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "9b0d4b91a27fde8a6b8513af8b04bdcb643e4539",
+      "_score": 3,
+      "_why": [
+        "title match: grant",
+        "summary match: farming"
       ]
     },
     {
@@ -637,6 +672,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "9ea219c0be64b22e552a7095f9264c37bece98c7",
       "_score": 3,
       "_why": [
         "title match: grant",
@@ -644,43 +680,23 @@
       ]
     },
     {
-      "title": "Cyber Security Academic Startup Accelerator Programme Y10 Phase 1",
-      "funder": "Innovate UK",
-      "summary": "UK registered academic institutions can apply for a share of up to £800,000 to join the Cyber Security Academic Startup Accelerator Programme (CyberASAP). This funding is from the Department for Science, Innovation and Technology (DSIT). Eligibility This competition is open to single applicants and",
-      "eligibility_notes": "",
-      "deadline_date": "2026-02-11",
+      "title": "zum Förderprogramm \"VC Pre-Seed Fonds (B#)\"",
+      "funder": "Investitionsbank Berlin (IBB)",
+      "summary": "",
+      "eligibility_notes": "Wer wird gefördert? Für eine Finanzierung kommen Unternehmen in Frage, welche folgende Kriterien erfüllen: Technologieunternehmen mit Disruptions- und Skalierungspotenzial Das Unternehmen ist in einer von der Union als strategisch definierten Branche tätig, dazu zählen:",
+      "deadline_date": null,
       "funding_amount_min": null,
-      "funding_amount_max": 800000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2376/overview/1b9b9265-ca4b-4f8c-a0c2-577cb8713642",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
+      "funding_amount_max": null,
+      "location_scope": "Berlin",
+      "themes": "[\"startup\", \"innovation\", \"sme\"]",
+      "url": "https://www.ibb.de/de/foerderprogramme/vc-pre-seed-fonds.html",
+      "source": "berlin_ibb_programs",
+      "date_found": "2026-01-18T13:22:48+00:00",
       "confidence_score": 0.5,
-      "_score": 3,
+      "fingerprint": "29f51c3eae70f2a5f02822e18a5931aee85cede2",
+      "_score": 2,
       "_why": [
-        "title match: startup",
-        "summary match: funding"
-      ]
-    },
-    {
-      "title": "Full ADOPT Grant: Round 5",
-      "funder": "Innovate UK",
-      "summary": "Farming, growing or forestry businesses based in England can apply for a share of up to £4.5 million for on-farm trial and demonstration projects, to improve adoption of new ideas or solutions in the agricultural sector. Eligibility This competition is open to collaborations only. To lead a project",
-      "eligibility_notes": "",
-      "deadline_date": "2026-02-04",
-      "funding_amount_min": null,
-      "funding_amount_max": 4500000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2358/overview/f93f32c2-dd04-474d-bc35-a8af1ecac1a9",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "_score": 3,
-      "_why": [
-        "title match: grant",
-        "summary match: farming"
+        "title match: seed"
       ]
     },
     {
@@ -697,6 +713,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "4705ae05c8aeabfbf16c79f868fee9f7006ceb57",
       "_score": 2,
       "_why": [
         "summary match: grant",
@@ -717,6 +734,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "22074940cb5ccd7c09e98a74bbf7334bcb6d171e",
       "_score": 2,
       "_why": [
         "title match: energy"
@@ -736,6 +754,7 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "2d8c8adfbe27c47366deb6516f2698d99d26a5e7",
       "_score": 2,
       "_why": [
         "title match: energy"
@@ -755,28 +774,30 @@
       "source": "innovate_uk_competitions",
       "date_found": "2026-01-18T15:10:59+00:00",
       "confidence_score": 0.5,
+      "fingerprint": "8013d2e491a5c534e30dc292b65636345a9f101e",
       "_score": 2,
       "_why": [
         "title match: energy"
       ]
     },
     {
-      "title": "zum Förderprogramm \"VC Pre-Seed Fonds (B#)\"",
-      "funder": "Investitionsbank Berlin (IBB)",
-      "summary": "",
-      "eligibility_notes": "Wer wird gefördert? Für eine Finanzierung kommen Unternehmen in Frage, welche folgende Kriterien erfüllen: Technologieunternehmen mit Disruptions- und Skalierungspotenzial Das Unternehmen ist in einer von der Union als strategisch definierten Branche tätig, dazu zählen:",
-      "deadline_date": null,
+      "title": "Robotics Adoption Central Convening Body",
+      "funder": "Innovate UK",
+      "summary": "UK registered organisations can apply for a share of up to £2 million for creating a central convening body to coordinate the robotics adoption hubs. Funding is from the Department for Science, Innovation and Technology (DSIT). Eligibility This competition is open to single applicants and collaborat",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-15",
       "funding_amount_min": null,
-      "funding_amount_max": null,
-      "location_scope": "Berlin",
-      "themes": "[\"startup\", \"innovation\", \"sme\"]",
-      "url": "https://www.ibb.de/de/foerderprogramme/vc-pre-seed-fonds.html",
-      "source": "berlin_ibb_programs",
-      "date_found": "2026-01-18T13:22:48+00:00",
+      "funding_amount_max": 2000000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2409/overview/c7e5dd6a-9f34-4614-b548-214b76190c14",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-02-24T18:13:27+00:00",
       "confidence_score": 0.5,
-      "_score": 2,
+      "fingerprint": "83d81d89490f830ca4b6aad8d87d9c812e387151",
+      "_score": 1,
       "_why": [
-        "title match: seed"
+        "summary match: funding"
       ]
     }
   ]

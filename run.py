@@ -1,9 +1,14 @@
-import yaml
+# run.py
+
+from __future__ import annotations
+
+import argparse
 import os
 from pathlib import Path
-import argparse
 
-from services.email_resend import send_resend_email as send_html_email
+import yaml
+
+from services.email_resend import send_email as send_html_email
 from reminders import get_due_soon, render_reminder_html
 
 from sources.berlin_ibb import fetch_berlin_ibb_programs
@@ -17,6 +22,9 @@ from sources.rss_source import fetch_rss
 from store import upsert_grant
 from score import score_grant
 from digest import write_outputs
+
+# ✅ Supabase helpers
+from services.supabase_client import upsert_grants, grant_fingerprint
 
 DB_PATH = "data/grants.db"
 
@@ -32,7 +40,6 @@ def load_yaml(path: str):
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
-# 2) Wire per-country profiles in run.py (helper)
 def load_profiles():
     return {
         "DE": load_yaml("profiles/germany_startup.yaml"),
@@ -42,10 +49,25 @@ def load_profiles():
     }
 
 
+def _has_column(conn, table: str, col: str) -> bool:
+    """
+    SQLite schema check. Prevents crashes like:
+    'column "last_seen" does not exist'
+    """
+    try:
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        cols = {r[1] for r in rows}  # name is index 1
+        return col in cols
+    except Exception:
+        return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--send", action="store_true", help="Send digest email")
-    ap.add_argument("--remind", action="store_true", help="Send deadline reminders (7/14 days)")
+    ap.add_argument(
+        "--remind", action="store_true", help="Send deadline reminders (7/14 days)"
+    )
     args = ap.parse_args()
 
     profiles = load_profiles()
@@ -62,7 +84,7 @@ def main():
     # 1) Ingest all sources
     # -----------------------
     for s in sources_cfg.get("sources", []):
-        items = []
+        items: list[dict] = []
 
         # --- Berlin IBB programs (custom source) ---
         if s.get("id") == "berlin_ibb_programs":
@@ -82,7 +104,6 @@ def main():
                     "funding_amount_max": it.get("funding_amount_max"),
                 }
 
-                # Skip empties
                 if not (g["title"] and g["url"]):
                     continue
 
@@ -108,14 +129,15 @@ def main():
                         g["funding_amount_min"] = extra["funding_amount_min"]
 
                     if extra.get("summary"):
-                        # detail page wins
                         g["summary"] = extra["summary"]
 
                 items.append(g)
 
         # --- TEF Entrepreneurship ---
         elif s.get("id") == "tef_entrepreneurship":
-            raw_items = fetch_tef_programme(s["url"], programme_url=s.get("programme_url")) or []
+            raw_items = fetch_tef_programme(
+                s["url"], programme_url=s.get("programme_url")
+            ) or []
             for it in raw_items:
                 g = {
                     "title": it.get("title"),
@@ -173,7 +195,7 @@ def main():
                 if g["title"] and g["url"]:
                     items.append(g)
 
-        # --- Existing handlers (RSS, etc.) ---
+        # --- RSS (default) ---
         else:
             if s.get("type") != "rss":
                 continue
@@ -196,37 +218,50 @@ def main():
 
     # ------------------------------------
     # 2) Pull recent items and normalize
+    #    ✅ FIX: don't ORDER BY last_seen if column doesn't exist
     # ------------------------------------
+    order_col = "last_seen" if _has_column(conn, "grants", "last_seen") else "date_found"
     rows = conn.execute(
         "SELECT title, funder, summary, eligibility_notes, deadline_date, "
         "funding_amount_min, funding_amount_max, location_scope, themes, url, source, date_found, confidence_score "
-        "FROM grants ORDER BY last_seen DESC LIMIT 500"
+        f"FROM grants ORDER BY {order_col} DESC LIMIT 500"
     ).fetchall()
 
-    normalized = []
+    normalized: list[dict] = []
     for r in rows:
-        normalized.append(
-            {
-                "title": r[0],
-                "funder": r[1],
-                "summary": r[2],
-                "eligibility_notes": r[3],
-                "deadline_date": r[4],
-                "funding_amount_min": r[5],
-                "funding_amount_max": r[6],
-                "location_scope": r[7],
-                "themes": r[8],
-                "url": r[9],
-                "source": r[10],
-                "date_found": r[11],
-                "confidence_score": r[12],
-            }
-        )
+        title = r[0]
+        url = r[9]
+
+        gg = {
+            "title": title,
+            "funder": r[1],
+            "summary": r[2],
+            "eligibility_notes": r[3],
+            "deadline_date": r[4],
+            "funding_amount_min": r[5],
+            "funding_amount_max": r[6],
+            "location_scope": r[7],
+            "themes": r[8],
+            "url": url,
+            "source": r[10],
+            "date_found": r[11],
+            "confidence_score": r[12],
+        }
+
+        # ✅ Stable dedupe fingerprint (title + url)
+        if title and url:
+            gg["fingerprint"] = grant_fingerprint(title, url)
+
+        normalized.append(gg)
 
     # ------------------------------------
     # 3) Score per profile and build sections
     # ------------------------------------
+
+    STORE_LIMIT_PER_PACK = 200
+
     sections: dict[str, list[dict]] = {}
+    store_sections: dict[str, list[dict]] = {}
 
     for key, prof in profiles.items():
         scored = []
@@ -237,9 +272,10 @@ def main():
             gg["_why"] = why
             scored.append(gg)
 
-        # Sort then dedupe per section (keeps highest-score version per canonical URL)
+        # sort by score
         scored.sort(key=lambda x: x.get("_score", 0), reverse=True)
 
+        # Deduplicate by canonical URL
         deduped = {}
         for g in scored:
             k = canonical_url(g.get("url")) or (g.get("title") or "").strip().lower()
@@ -249,26 +285,52 @@ def main():
         scored = list(deduped.values())
         scored.sort(key=lambda x: x.get("_score", 0), reverse=True)
 
+        # small list → email output
         top_n = int(prof.get("top_n", 10))
         sections[key] = scored[:top_n]
+
+        # big list → storage pool
+        store_sections[key] = scored[:STORE_LIMIT_PER_PACK]
+
 
     # ------------------------------------
     # 4) Apply your “main vs bonus” rule
     # ------------------------------------
-    # Keep DE as main, but exclude BONUS_SOURCES from DE section
-    sections["DE"] = [g for g in sections.get("DE", []) if g.get("source") not in BONUS_SOURCES]
 
-    # Ensure keys exist even if profiles missing/empty (defensive)
+    sections["DE"] = [g for g in sections.get("DE", []) if g.get("source") not in BONUS_SOURCES]
+    store_sections["DE"] = [g for g in store_sections.get("DE", []) if g.get("source") not in BONUS_SOURCES]
+
     sections.setdefault("EU", [])
     sections.setdefault("UK", [])
     sections.setdefault("AFRICA", [])
 
+    store_sections.setdefault("EU", [])
+    store_sections.setdefault("UK", [])
+    store_sections.setdefault("AFRICA", [])
+
+
     # ------------------------------------
-    # 5) Write outputs with NEW API
+    # 4.5) Upsert larger pool into Supabase
+    # ------------------------------------
+
+    try:
+        supa_total = 0
+        for pack, items in store_sections.items():
+            for g in items:
+                if not g.get("fingerprint") and g.get("title") and g.get("url"):
+                    g["fingerprint"] = grant_fingerprint(g["title"], g["url"])
+
+            supa_total += upsert_grants(items, pack=pack)
+
+        print(f"✅ Supabase upsert done: {supa_total} rows attempted (store pool).")
+
+    except Exception as e:
+        print("⚠️ Supabase upsert skipped/failed:", str(e))
+
+    # ------------------------------------
+    # 5) Write outputs
     # ------------------------------------
     json_path, csv_path, html_path = write_outputs(sections, out_dir="data")
-
-    # Load HTML output (for sending email)
     digest_html = Path(html_path).read_text(encoding="utf-8")
 
     # ------------------------------------
@@ -276,7 +338,7 @@ def main():
     # ------------------------------------
     if args.send:
         to_email = os.environ.get("GM_TO", "me")
-        send_html_email("Grant Digest", digest_html, to_email=to_email)
+        send_html_email(subject="Grant Digest", html=digest_html, to_email=to_email)
         print("✅ Sent digest email to", to_email)
 
     if args.remind:
@@ -285,7 +347,11 @@ def main():
             html = render_reminder_html(due_items, days)
             if html:
                 to_email = os.environ.get("GM_TO", "me")
-                send_html_email(f"Grant deadlines in the next {days} days", html, to_email=to_email)
+                send_html_email(
+                    subject=f"Grant deadlines in the next {days} days",
+                    html=html,
+                    to_email=to_email,
+                )
                 print(f"✅ Sent {days}-day reminder to", to_email)
 
     # ------------------------------------
@@ -305,6 +371,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Windows:
+#   .venv\Scripts\activate
+#   python run.py
+#   python run.py --send
 
 # .venv\Scripts\activate
 # python run.py --send

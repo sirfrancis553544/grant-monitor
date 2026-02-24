@@ -1,83 +1,295 @@
+# services/supabase_client.py
+
 import os
-import json
-import urllib.parse
-import urllib.request
-import urllib.error
+import hashlib
+import re
+import datetime
+from typing import Any, Dict, List, Optional
+
+from supabase import create_client, Client
 
 
-def _env(name: str) -> str:
-    v = os.environ.get(name)
-    if not v:
-        raise RuntimeError(f"Missing env var: {name}")
-    return v.strip()
+def _sb() -> Client:
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not key:
+        raise RuntimeError("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
+    return create_client(url, key)
 
 
-def _request(method: str, url: str, headers: dict, body: dict | None = None) -> dict | list | None:
-    data = None
-    if body is not None:
-        data = json.dumps(body).encode("utf-8")
-
-    req = urllib.request.Request(url=url, data=data, method=method)
-    for k, v in headers.items():
-        req.add_header(k, v)
-
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode("utf-8").strip()
-            if not raw:
-                return None
-            return json.loads(raw)
-    except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8", errors="ignore")
-        raise RuntimeError(f"HTTP {e.code} calling {url}: {err}") from e
+def _utc_now_iso() -> str:
+    return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
 
 
-def _rest_headers() -> dict:
-    # We don't actually need supabase_url here, but leaving it is fine.
-    supabase_key = _env("SUPABASE_SERVICE_ROLE_KEY")
-
-    # ✅ This is the correct “common bug fix” header set:
-    return {
-        "apikey": supabase_key,
-        "Authorization": f"Bearer {supabase_key}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        # Optional but fine to keep (PostgREST)
-        "Prefer": "return=representation",
-    }
+# ----------------------------
+# Fingerprint (dedupe key)
+# ----------------------------
+_ws = re.compile(r"\s+")
 
 
-def get_active_subscribers() -> list[dict]:
-    supabase_url = _env("SUPABASE_URL").rstrip("/")
-    headers = _rest_headers()
+def normalize_text(s: str) -> str:
+    s = (s or "").strip().lower()
+    s = _ws.sub(" ", s)
+    return s
 
-    qs = urllib.parse.urlencode({
-        "select": "id,email,pack,unsubscribe_token",
-        "status": "eq.active",
-    })
-    url = f"{supabase_url}/rest/v1/subscribers?{qs}"
 
-    data = _request("GET", url, headers)
-    return data if isinstance(data, list) else []
+def normalize_url(u: str) -> str:
+    u = (u or "").strip()
+    u = u.replace("http://", "https://")
+    # canonicalize query + trailing slash
+    u = u.split("?", 1)[0].rstrip("/")
+    return u
+
+
+def grant_fingerprint(title: str, url: str) -> str:
+    """
+    Stable key to identify the same grant across scans.
+    Uses normalized title + canonical url.
+    """
+    base = f"{normalize_text(title)}|{normalize_url(url)}"
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()
+
+
+# ----------------------------
+# Subscribers (existing usage)
+# ----------------------------
+def get_active_subscribers() -> List[Dict[str, Any]]:
+    sb = _sb()
+    res = (
+        sb.table("subscribers")
+        .select("id,email,pack,unsubscribe_token")
+        .eq("status", "active")
+        .execute()
+    )
+    return res.data or []
 
 
 def log_send(
     subscriber_id: str,
     pack: str,
     item_count: int,
-    status: str = "ok",
-    error: str | None = None
+    status: str,
+    error: Optional[str],
 ) -> None:
-    supabase_url = _env("SUPABASE_URL").rstrip("/")
-    headers = _rest_headers()
+    sb = _sb()
+    sb.table("send_logs").insert(
+        {
+            "subscriber_id": subscriber_id,
+            "pack": pack,
+            "item_count": item_count,
+            "status": status,
+            "error": error,
+        }
+    ).execute()
 
-    payload = {
-        "subscriber_id": subscriber_id,
-        "pack": pack,
-        "item_count": int(item_count),
-        "status": status,
-        "error": error,
-    }
 
-    url = f"{supabase_url}/rest/v1/send_logs"
-    _request("POST", url, headers, payload)
+# ----------------------------
+# Grants storage (scan -> Supabase)
+# ----------------------------
+def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> int:
+    """
+    Upserts grants into public.grants using fingerprint.
+
+    IMPORTANT:
+    - We try a "full" payload first (includes newer columns like last_seen/raw/etc).
+    - If your grants table is older / missing some columns (e.g., pack), we retry
+      with a smaller, safer payload to avoid breaking your scan.
+
+    Returns: number of rows attempted (not exact inserts).
+    """
+    if not grants:
+        return 0
+
+    now = _utc_now_iso()
+
+    # Full rows (best schema)
+    rows_full: List[Dict[str, Any]] = []
+    for g in grants:
+        if not isinstance(g, dict):
+            continue
+
+        title = (g.get("title") or "").strip()
+        url = (g.get("url") or "").strip()
+        if not title or not url:
+            continue
+
+        fp = g.get("fingerprint") or grant_fingerprint(title, url)
+
+        rows_full.append(
+            {
+                "fingerprint": fp,
+                "canonical_url": normalize_url(url) or None,
+                # pack is optional and may not exist in your grants table
+                "pack": (pack or g.get("pack") or g.get("section") or None),
+                "title": g.get("title"),
+                "summary": g.get("summary"),
+                "eligibility_notes": g.get("eligibility_notes"),
+                "funder": g.get("funder"),
+                "url": g.get("url"),
+                "deadline_date": g.get("deadline_date"),
+                "funding_amount_min": g.get("funding_amount_min"),
+                "funding_amount_max": g.get("funding_amount_max"),
+                "location_scope": g.get("location_scope"),
+                "themes": g.get("themes"),
+                "source": g.get("source"),
+                "date_found": g.get("date_found") or now,
+                "last_seen": now,
+                "confidence_score": g.get("confidence_score") or g.get("_score"),
+                "raw": g,  # jsonb column
+            }
+        )
+
+    if not rows_full:
+        return 0
+
+    sb = _sb()
+
+    # 1) Try full upsert (may fail if older table missing columns like "pack", "raw", etc.)
+    try:
+        sb.table("grants").upsert(rows_full, on_conflict="fingerprint").execute()
+        return len(rows_full)
+    except Exception as e1:
+        # 2) Retry without "pack" (common cause if table doesn’t have pack column yet)
+        try:
+            rows_no_pack = [{k: v for k, v in r.items() if k != "pack"} for r in rows_full]
+            sb.table("grants").upsert(rows_no_pack, on_conflict="fingerprint").execute()
+            return len(rows_no_pack)
+        except Exception as e2:
+            # 3) Last resort: minimal safe payload
+            rows_min = []
+            for r in rows_full:
+                rows_min.append(
+                    {
+                        "fingerprint": r.get("fingerprint"),
+                        "title": r.get("title"),
+                        "summary": r.get("summary"),
+                        "url": r.get("url"),
+                        "source": r.get("source"),
+                        # if these columns exist, great; if not, this may still fail
+                        "deadline_date": r.get("deadline_date"),
+                        "funding_amount_min": r.get("funding_amount_min"),
+                        "funding_amount_max": r.get("funding_amount_max"),
+                        "location_scope": r.get("location_scope"),
+                        "themes": r.get("themes"),
+                    }
+                )
+
+            sb.table("grants").upsert(rows_min, on_conflict="fingerprint").execute()
+            return len(rows_min)
+
+
+def fetch_latest_grants(limit: int = 500) -> List[Dict[str, Any]]:
+    sb = _sb()
+    # Prefer last_seen (you just added it). If your table has updated_at instead, this is still fine.
+    res = (
+        sb.table("grants")
+        .select("*")
+        .order("last_seen", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return res.data or []
+
+
+def fetch_grants_for_pack(pack: str, limit: int = 200) -> List[Dict[str, Any]]:
+    """
+    MVP pack filter:
+    - If you stored pack in grants rows, this returns pack-scoped results.
+    - If pack column doesn't exist yet, it falls back to latest grants.
+    """
+    sb = _sb()
+    pack = (pack or "DE").upper()
+
+    try:
+        res = (
+            sb.table("grants")
+            .select("*")
+            .eq("pack", pack)
+            .order("last_seen", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        data = res.data or []
+        if data:
+            return data
+    except Exception:
+        # likely "column pack does not exist"
+        pass
+
+    return fetch_latest_grants(limit=limit)
+
+
+# ----------------------------
+# Prevent duplicates in emails
+# ----------------------------
+def get_sent_counts(subscriber_id: str, fingerprints: List[str]) -> Dict[str, int]:
+    """
+    Returns {"<fingerprint>": sent_count, ...} for this subscriber.
+    Table expected: grant_sends(subscriber_id, grant_fingerprint, sent_count, last_sent_at)
+    """
+    if not fingerprints:
+        return {}
+
+    sb = _sb()
+    res = (
+        sb.table("grant_sends")
+        .select("grant_fingerprint,sent_count")
+        .eq("subscriber_id", subscriber_id)
+        .in_("grant_fingerprint", fingerprints)
+        .execute()
+    )
+
+    out: Dict[str, int] = {}
+    for row in (res.data or []):
+        fp = row.get("grant_fingerprint")
+        if not fp:
+            continue
+        out[fp] = int(row.get("sent_count") or 0)
+    return out
+
+
+def bump_sent(subscriber_id: str, fingerprints: List[str]) -> None:
+    """
+    Increment sent_count for each fingerprint. Creates rows if missing.
+
+    Note:
+    - Supabase python client doesn't provide a clean atomic increment across many rows.
+      For MVP we:
+        1) upsert missing rows with sent_count=0
+        2) read current counts
+        3) upsert updated counts
+    """
+    if not fingerprints:
+        return
+
+    sb = _sb()
+
+    # 1) Ensure existence
+    seed_rows = [
+        {"subscriber_id": subscriber_id, "grant_fingerprint": fp, "sent_count": 0}
+        for fp in fingerprints
+    ]
+    sb.table("grant_sends").upsert(
+        seed_rows, on_conflict="subscriber_id,grant_fingerprint"
+    ).execute()
+
+    # 2) Read current counts
+    current = get_sent_counts(subscriber_id, fingerprints)
+
+    # 3) Write back bumped counts
+    iso = _utc_now_iso()
+    updates = []
+    for fp in fingerprints:
+        c = current.get(fp, 0) + 1
+        updates.append(
+            {
+                "subscriber_id": subscriber_id,
+                "grant_fingerprint": fp,
+                "sent_count": c,
+                "last_sent_at": iso,
+            }
+        )
+
+    sb.table("grant_sends").upsert(
+        updates, on_conflict="subscriber_id,grant_fingerprint"
+    ).execute()
