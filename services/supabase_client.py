@@ -57,11 +57,21 @@ def get_active_subscribers() -> List[Dict[str, Any]]:
     sb = _sb()
     res = (
         sb.table("subscribers")
-        .select("id,email,pack,unsubscribe_token")
+        .select("id,email,pack,unsubscribe_token,status")
         .eq("status", "active")
         .execute()
     )
-    return res.data or []
+
+    rows = res.data or []
+
+    # Normalize pack so send job does not get weird values like "de ", " germany ", None, etc.
+    out: List[Dict[str, Any]] = []
+    for row in rows:
+        raw_pack = (row.get("pack") or "").strip().upper()
+        row["pack"] = raw_pack if raw_pack else None
+        out.append(row)
+
+    return out
 
 
 def log_send(
@@ -193,12 +203,14 @@ def fetch_latest_grants(limit: int = 500) -> List[Dict[str, Any]]:
 
 def fetch_grants_for_pack(pack: str, limit: int = 200) -> List[Dict[str, Any]]:
     """
-    MVP pack filter:
-    - If you stored pack in grants rows, this returns pack-scoped results.
-    - If pack column doesn't exist yet, it falls back to latest grants.
+    Strict pack filter.
+    Never fall back to latest grants, because that can send the wrong pack to users.
     """
     sb = _sb()
-    pack = (pack or "DE").upper()
+    pack = (pack or "").strip().upper()
+
+    if not pack:
+        return []
 
     try:
         res = (
@@ -209,14 +221,49 @@ def fetch_grants_for_pack(pack: str, limit: int = 200) -> List[Dict[str, Any]]:
             .limit(limit)
             .execute()
         )
-        data = res.data or []
-        if data:
-            return data
-    except Exception:
-        # likely "column pack does not exist"
-        pass
+        return res.data or []
+    except Exception as e:
+        print(f"⚠️ fetch_grants_for_pack failed for pack={pack}: {e}")
+        return []
+    
+def has_grants_for_pack(pack: str) -> bool:
+    sb = _sb()
+    pack = (pack or "").strip().upper()
 
-    return fetch_latest_grants(limit=limit)
+    if not pack:
+        return False
+
+    try:
+        res = (
+            sb.table("grants")
+            .select("fingerprint")
+            .eq("pack", pack)
+            .limit(1)
+            .execute()
+        )
+        return bool(res.data)
+    except Exception as e:
+        print(f"⚠️ has_grants_for_pack failed for pack={pack}: {e}")
+        return False
+
+def has_grants_for_pack(pack: str) -> bool:
+    sb = _sb()
+    pack = (pack or "").strip().upper()
+    if not pack:
+        return False
+
+    try:
+        res = (
+            sb.table("grants")
+            .select("fingerprint")
+            .eq("pack", pack)
+            .limit(1)
+            .execute()
+        )
+        return bool(res.data)
+    except Exception as e:
+        print(f"⚠️ has_grants_for_pack failed for pack={pack}: {e}")
+        return False
 
 
 # ----------------------------

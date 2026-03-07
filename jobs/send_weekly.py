@@ -10,6 +10,7 @@ from services.supabase_client import (
     get_active_subscribers,
     log_send,
     fetch_grants_for_pack,
+    has_grants_for_pack,
     get_sent_counts,
     bump_sent,
 )
@@ -107,7 +108,30 @@ def main():
     for sub in subs:
         sid = sub["id"]
         email = sub["email"]
-        pack = (sub.get("pack") or "DE").upper()
+        pack = (sub.get("pack") or "").strip().upper()
+        if not pack:
+            print(f"⚠️ Subscriber {email} has no pack. Skipping.")
+            log_send(
+                subscriber_id=sid,
+                pack="UNKNOWN",
+                item_count=0,
+                status="skipped",
+                error="missing_pack",
+            )
+            continue
+
+        if not has_grants_for_pack(pack):
+            print(f"⚠️ No grants found for subscriber pack {pack} ({email}). Skipping.")
+            log_send(
+                subscriber_id=sid,
+                pack=pack,
+                item_count=0,
+                status="skipped",
+                error="no_grants_for_pack",
+            )
+            continue
+         # 1) Pull candidates from Supabase (freshest first)
+        candidates = fetch_grants_for_pack(pack, limit=200)
 
         try:
             # 1) Pull candidates from Supabase (freshest first)
