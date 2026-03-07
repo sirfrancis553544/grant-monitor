@@ -12,6 +12,7 @@ from services.email_resend import send_email as send_html_email
 from reminders import get_due_soon, render_reminder_html
 from sources.aecf import fetch_aecf_opportunities
 from sources.eu_funding_tenders import fetch_eu_funding_tenders_calls
+from sources.gsma import fetch_gsma_innovation_fund
 
 from sources.berlin_ibb import fetch_berlin_ibb_programs
 from sources.berlin_ibb_detail import enrich_berlin_ibb_program
@@ -159,7 +160,7 @@ def main():
                 }
                 if g["title"] and g["url"]:
                     items.append(g)
-                    
+
         # --- AECF Opportunities ---
         elif s.get("id") == "aecf_opportunities":
             raw_items = fetch_aecf_opportunities(s["url"]) or []
@@ -220,6 +221,26 @@ def main():
                 if g["title"] and g["url"]:
                     items.append(g)
 
+        # --- GSMA Innovation Fund ---
+        elif s.get("id") == "gsma_innovation_fund":
+            raw_items = fetch_gsma_innovation_fund(s["url"]) or []
+            for it in raw_items:
+                g = {
+                    "title": it.get("title"),
+                    "url": it.get("url"),
+                    "source": s.get("id"),
+                    "funder": s.get("funder"),
+                    "location_scope": s.get("location_scope"),
+                    "themes": s.get("themes") or [],
+                    "summary": it.get("summary") or "",
+                    "eligibility_notes": it.get("eligibility_notes") or "",
+                    "deadline_date": it.get("deadline_date"),
+                    "funding_amount_min": it.get("funding_amount_min"),
+                    "funding_amount_max": it.get("funding_amount_max"),
+                }
+                if g["title"] and g["url"]:
+                    items.append(g)
+                    
         # --- Innovate UK competitions ---
         elif s.get("id") == "innovate_uk_competitions":
             raw_items = fetch_innovate_uk_competitions(s["url"]) or []

@@ -166,7 +166,6 @@ sources:
     location_scope: "Africa"
     themes: ["tech", "mobile", "startup"]
     url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
-    enabled: false
 
   - id: afdb_opportunities
     type: html
