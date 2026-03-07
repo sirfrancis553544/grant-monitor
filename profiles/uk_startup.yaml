@@ -3,20 +3,39 @@ company_size: startup
 max_days_to_deadline: 180
 
 keywords_include:
+  - startup
+  - SME
   - innovation
-  - competition
+  - innovation competition
+  - grant
+  - funding
+  - accelerator
   - R&D
+  - research
   - feasibility
   - prototype
+  - pilot
+  - demonstrator
+  - technology
+  - digital
+  - AI
+  - cybersecurity
+  - cyber
+  - data
   - net zero
   - climate
   - energy
-  - AI
-  - cyber
+  - clean tech
+  - mobility
+  - manufacturing
+  - life sciences
 
 keywords_exclude:
   - procurement
-  - supply of
-  - school
+  - tender
+  - supply of equipment
+  - building services
+  - school construction
+  - consultancy contract
 
 top_n: 10

@@ -4,24 +4,47 @@ max_days_to_deadline: 365
 
 keywords_include:
   - startup
+  - entrepreneur
   - entrepreneurship
+  - founder
+  - founders
+  - business
+  - small business
+  - SME
+  - MSME
+  - innovation
+  - technology
+  - digital
+  - software
+  - fintech
+  - healthtech
+  - edtech
+  - agritech
+  - logistics
+  - manufacturing
+  - creative
+  - jobs
+  - youth
+  - women
   - seed
+  - accelerator
+  - incubator
+  - training
+  - capacity building
   - grant
   - funding
-  - sustainable
-  - sustainability
-  - climate
-  - energy
-  - farming
-  - agriculture
-  - agritech
-  - food security
-  - water
-  - circular economy
+  - investment
+  - enterprise
+  - business development
+  - scale
+  - growth
 
 keywords_exclude:
   - procurement
   - tender
-  - school
+  - school construction
+  - road construction
+  - supply of equipment
+  - consultancy services only
 
 top_n: 10

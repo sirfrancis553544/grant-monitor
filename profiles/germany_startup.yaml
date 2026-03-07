@@ -1,23 +1,43 @@
 country: DE
 company_size: startup
-max_days_to_deadline: 90
+max_days_to_deadline: 120
 
 keywords_include:
+  - startup
+  - innovation
+  - technologie
+  - technologieentwicklung
+  - KI
   - AI
-  - Künstliche Intelligenz
-  - Innovation
-  - Forschung
-  - Entwicklung
+  - künstliche intelligenz
+  - digitalisierung
+  - software
+  - cyber
+  - cybersicherheit
+  - forschung
+  - entwicklung
   - F&E
-  - Digitalisierung
-  - Klima
-  - Energie
-  - Cyber
+  - technologieprogramm
+  - förderung
+  - innovationsförderung
+  - klima
+  - energie
+  - nachhaltigkeit
+  - mobilität
+  - industrie
+  - industrie 4.0
+  - deep tech
+  - startup förderung
+  - KMU
+  - mittelstand
 
 keywords_exclude:
-  - Schule
-  - Kindergarten
-  - Landwirtschaft
-  - Kultur
+  - schule
+  - kindergarten
+  - kulturförderung
+  - landwirtschaft
+  - bauauftrag
+  - lieferauftrag
+  - ausschreibung
 
 top_n: 20
