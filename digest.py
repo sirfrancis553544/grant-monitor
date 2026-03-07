@@ -8,8 +8,16 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 
+PACK_LABELS = {
+    "DE": "🇩🇪 Germany",
+    "EU": "🇪🇺 European Union",
+    "UK": "🇬🇧 United Kingdom",
+    "AFRICA": "🌍 Africa",
+}
+
+
 def _fmt_money(max_amt, currency="€"):
-    """Format a max amount into a compact label like €250k / €1.2M."""
+    """Format max amount into labels like €250k / €1.2M."""
     if max_amt in (None, "", 0, "0"):
         return None
     try:
@@ -17,10 +25,14 @@ def _fmt_money(max_amt, currency="€"):
     except Exception:
         return None
 
+    # Guard against obviously broken values
+    if v > 1_000_000_000:
+        return None
+
     if v >= 1_000_000:
-        return f"{currency}{v/1_000_000:.1f}M"
+        return f"{currency}{v / 1_000_000:.1f}M"
     if v >= 1_000:
-        return f"{currency}{int(v/1_000)}k"
+        return f"{currency}{int(v / 1_000)}k"
     return f"{currency}{int(v)}"
 
 
@@ -31,89 +43,119 @@ def _fmt_deadline(d):
     ds = str(d).strip()
     if ds.lower() == "rolling":
         return "ROLLING"
+    if ds.lower() == "open":
+        return "OPEN"
     return ds
 
 
-def render_card(g):
+def _trim_summary(text: str, max_len: int = 240) -> str:
+    text = (text or "").strip()
+    if not text:
+        return ""
+    if len(text) <= max_len:
+        return text
+    return text[:max_len].rsplit(" ", 1)[0] + "…"
+
+
+def _normalize_why(why) -> list[str]:
+    if isinstance(why, str):
+        return [why.strip()] if why.strip() else []
+    if isinstance(why, (list, tuple)):
+        return [str(x).strip() for x in why if str(x).strip()]
+    return []
+
+
+def _first_nonempty(*values) -> str:
+    for v in values:
+        s = str(v or "").strip()
+        if s:
+            return s
+    return ""
+
+
+def render_card(g: dict):
     deadline = _fmt_deadline(g.get("deadline_date"))
     funding = _fmt_money(g.get("funding_amount_max"))
-
-    why = g.get("_why")
-    if isinstance(why, str):
-        why_list = [why.strip()] if why.strip() else []
-    elif isinstance(why, (list, tuple)):
-        why_list = [str(x).strip() for x in why if str(x).strip()]
-    else:
-        why_list = []
+    why_list = _normalize_why(g.get("_why"))
 
     url = (g.get("url") or "#").strip()
-    title_txt = (g.get("title") or "").strip()
-    summary = (g.get("summary") or "").strip()
-    if len(summary) > 280:
-        summary = summary[:280].rsplit(" ", 1)[0] + "…"
+    title_txt = _first_nonempty(g.get("title"), "Untitled grant")
+    summary = _trim_summary(g.get("summary") or "")
 
-    # pack label (optional)
-    pack = (g.get("section_label") or "").strip()  # if you ever pass it in
-    if not pack:
-        # fallback: show nothing; section header already exists
-        pack = ""
-
-    # chips line
     chips = []
     if funding:
-        chips.append(f"<span style='font-weight:800'>Up to {escape(funding)}</span>")
+        chips.append(
+            f"""
+            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800">
+              Up to {escape(funding)}
+            </span>
+            """
+        )
     if deadline:
-        chips.append(f"Deadline: <span style='font-weight:800'>{escape(deadline)}</span>")
-    chips_html = " <span style='color:#d1d5db;margin:0 8px'>•</span> ".join(chips) if chips else ""
+        chips.append(
+            f"""
+            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#f8fafc;color:#334155;font-size:12px;font-weight:800;border:1px solid #e5e7eb">
+              Deadline: {escape(deadline)}
+            </span>
+            """
+        )
+
+    chips_html = "".join(chips)
 
     why_html = ""
     if why_list:
         why_html = (
-            "<div style='margin-top:10px;font-size:12px;line-height:1.5;color:#6b7280'>"
+            "<div style='margin-top:12px;font-size:12px;line-height:1.6;color:#6b7280'>"
             "<span style='font-weight:800;color:#374151'>Why matched:</span> "
-            + ", ".join(escape(x) for x in why_list[:6])
+            + ", ".join(escape(x) for x in why_list[:5])
             + "</div>"
         )
 
+    summary_html = ""
+    if summary:
+        summary_html = f"""
+        <div style="margin-top:12px;font-size:14px;line-height:1.65;color:#374151">
+          {escape(summary)}
+        </div>
+        """
+
     return f"""
-<div style="border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;background:#ffffff;margin-bottom:16px">
-  <!-- IMAGE HEADER -->
+<div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;background:#ffffff;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,0.04)">
   <div style="
     position:relative;
-    padding:16px;
+    padding:18px;
     background:
-      radial-gradient(120px 80px at 85% 30%, rgba(37,99,235,0.10), transparent 60%),
-      radial-gradient(140px 90px at 15% 70%, rgba(16,185,129,0.08), transparent 60%),
-      linear-gradient(135deg,#ffffff 0%,#f7f8fb 55%,#f3f4f6 100%);
+      radial-gradient(140px 90px at 85% 25%, rgba(37,99,235,0.10), transparent 60%),
+      radial-gradient(160px 100px at 15% 80%, rgba(16,185,129,0.08), transparent 60%),
+      linear-gradient(135deg,#ffffff 0%,#f8fafc 55%,#f3f4f6 100%);
   ">
     <div style="
       position:absolute; inset:0;
       background-image:
-        linear-gradient(to right, rgba(17,24,39,0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(17,24,39,0.06) 1px, transparent 1px);
-      background-size:40px 40px;
-      opacity:0.35;
+        linear-gradient(to right, rgba(17,24,39,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(17,24,39,0.05) 1px, transparent 1px);
+      background-size:36px 36px;
+      opacity:0.22;
     "></div>
 
-    <div style="position:relative;z-index:2;margin-top:12px;font-size:18px;font-weight:900;line-height:1.25;color:#111827">
-      <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
-        {escape(title_txt)}
-      </a>
-    </div>
+    <div style="position:relative;z-index:2">
+      <div style="font-size:20px;font-weight:900;line-height:1.3;color:#111827">
+        <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
+          {escape(title_txt)}
+        </a>
+      </div>
 
-    {"<div style='position:relative;z-index:2;margin-top:10px;font-size:12px;color:#374151'>" + chips_html + "</div>" if chips_html else ""}
+      {"<div style='margin-top:12px;display:flex;flex-wrap:wrap;gap:8px'>" + chips_html + "</div>" if chips_html else ""}
+    </div>
   </div>
 
-  <!-- BODY -->
-  <div style="padding:16px">
-    <div style="font-size:14px;line-height:1.6;color:#374151">
-      {escape(summary)}
-    </div>
+  <div style="padding:18px">
+    {summary_html}
 
-    <div style="margin-top:12px">
+    <div style="margin-top:14px">
       <a href="{escape(url)}" target="_blank" rel="noreferrer"
          style="display:inline-block;padding:10px 14px;border-radius:12px;background:#2563EB;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
-       Open application →
+        Open application →
       </a>
     </div>
 
@@ -126,15 +168,16 @@ def render_card(g):
 def _render_section(parts, heading, items, subheading=None):
     parts.append(
         f"""
-        <div style="margin:18px 0 10px;font-size:14px;color:#374151;font-weight:800">
+        <div style="margin:22px 0 10px;font-size:15px;color:#111827;font-weight:900">
           {escape(heading)}
         </div>
         """
     )
+
     if subheading:
         parts.append(
             f"""
-            <div style="color:#6B7280;font-size:14px;margin:-4px 0 14px">
+            <div style="color:#6B7280;font-size:14px;margin:-2px 0 14px">
               {escape(subheading)}
             </div>
             """
@@ -142,13 +185,15 @@ def _render_section(parts, heading, items, subheading=None):
 
     if items:
         for g in items:
-            # Guard: only render dict-like grants
             if isinstance(g, dict):
                 parts.append(render_card(g))
     else:
         parts.append(
-            '<div style="border:1px solid #e5e7eb;border-radius:14px;padding:16px;background:#ffffff">'
-            "No matches in this section.</div>"
+            """
+            <div style="border:1px solid #e5e7eb;border-radius:14px;padding:16px;background:#ffffff;color:#6b7280">
+              No matches in this section.
+            </div>
+            """
         )
 
 
@@ -157,44 +202,67 @@ def _normalize_sections(
 ) -> Dict[str, List[dict]]:
     """
     Backwards-compatible normalizer:
-    - If sections is a dict => return as-is (safe defaults)
-    - If sections is a list => wrap into a single section (DE by default)
+    - If sections is a dict => return as-is
+    - If sections is a list => wrap into DE by default for single-pack renderer compatibility
     """
     if sections is None:
         return {"DE": []}
 
     if isinstance(sections, list):
-        # Single-pack mode: wrap into a dict so the existing renderer works
         return {"DE": sections}
 
-    # Ensure values are lists (avoid None)
     out: Dict[str, List[dict]] = {}
     for k, v in (sections or {}).items():
         out[str(k)] = v or []
     return out
 
 
-def render_digest_html(sections, unsubscribe_url: str = "https://rubixscout.com/unsubscribe"):
+def _detect_primary_pack(sections: Dict[str, List[dict]]) -> str:
+    """
+    Pick the first non-empty pack in priority order.
+    """
+    for key in ("DE", "EU", "UK", "AFRICA"):
+        if sections.get(key):
+            return key
+    return "DE"
+
+
+def render_digest_html(
+    sections,
+    unsubscribe_url: str = "https://rubixscout.com/unsubscribe",
+):
     """
     Accepts either:
       - dict: {"DE":[...], "EU":[...], ...}
       - list: [ ... ]   (single-pack mode)
-    Renders Germany first, then a bonus block (EU + UK + Africa).
+    Renders a cleaner weekly digest email.
     """
     sections = _normalize_sections(sections)
 
     today = date.today().isoformat()
+
     de = sections.get("DE", []) or []
     eu = sections.get("EU", []) or []
     uk = sections.get("UK", []) or []
     af = sections.get("AFRICA", []) or []
 
-    title = f"Grant Digest ({today})"
     total = len(de) + len(eu) + len(uk) + len(af)
+    primary_pack = _detect_primary_pack(sections)
+    primary_pack_label = PACK_LABELS.get(primary_pack, primary_pack)
+
+    non_empty_sections = [(k, v) for k, v in sections.items() if v]
+    single_pack_mode = len(non_empty_sections) == 1
+
+    if single_pack_mode:
+        intro_text = "Here are this week’s strongest funding matches for your selected pack."
+        pack_display = primary_pack_label
+    else:
+        intro_text = "Here are this week’s best matches across your selected digest sections."
+        pack_display = "Multi-pack digest"
 
     parts = []
     parts.append(
-    f"""
+        f"""
 <html>
 <head>
   <meta charset="utf-8" />
@@ -203,80 +271,73 @@ def render_digest_html(sections, unsubscribe_url: str = "https://rubixscout.com/
 <body style="margin:0;padding:0;background:#f6f7fb;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827">
   <div style="max-width:820px;margin:0 auto;padding:22px">
 
-    <!-- HEADER (table layout = email safe) -->
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
-      style="background:#111827;color:#ffffff;border-radius:16px;padding:18px 18px;border-collapse:separate">
+      style="background:#111827;color:#ffffff;border-radius:18px;padding:18px 18px;border-collapse:separate">
       <tr>
         <td style="vertical-align:top;padding-right:12px">
           <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#93c5fd">
             RubixScout · Weekly Grant Digest
           </div>
-          <div style="margin-top:6px;font-size:20px;font-weight:900;line-height:1.15">
-            Hi — here are your best matches for {today}
+          <div style="margin-top:6px;font-size:22px;font-weight:900;line-height:1.15">
+            Hi — here are your best matches for {escape(today)}
           </div>
           <div style="margin-top:8px;font-size:13px;color:#d1d5db">
             {total} opportunities · Prioritized by fit · Source links included
           </div>
         </td>
 
-        <td style="vertical-align:top;text-align:right;width:180px">
+        <td style="vertical-align:top;text-align:right;width:210px">
           <div style="display:inline-block;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);padding:10px 12px;border-radius:12px">
             <div style="font-size:12px;color:#e5e7eb;font-weight:800">Pack</div>
             <div style="margin-top:2px;font-size:13px;font-weight:900;color:#ffffff;white-space:nowrap">
-              Germany + Bonus
+              {escape(pack_display)}
             </div>
           </div>
         </td>
       </tr>
     </table>
 
-    <!-- INTRO (replaces “How to use this email”) -->
     <div style="margin-top:14px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">
       <div style="font-size:14px;font-weight:900;color:#111827">
         Quick note 👋
       </div>
       <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#374151">
-        I’ve curated this week’s opportunities for your pack. Open the source link to verify eligibility and apply fast.
-        “Why matched” explains why each one showed up.
+        {escape(intro_text)} Open the source link to verify eligibility and apply fast.
+        “Why matched” explains why each opportunity showed up.
       </div>
     </div>
 """
+    )
 
-)
-
-    # Germany first
-    _render_section(parts, "🇩🇪 Germany — best matches", de)
-
-    # Bonus block (only show if any exist)
-    if eu or uk or af:
-        parts.append(
-            """
-        <h2 style="margin:32px 0 8px;font-size:20px">
-          🌍 Bonus: EU + UK + Africa startup funding
-        </h2>
-        <div style="color:#6B7280;font-size:14px;margin-bottom:14px">
-          Additional opportunities outside Germany that may still fit your company.
-        </div>
-            """
-        )
+    if single_pack_mode:
+        pack_key, items = non_empty_sections[0] if non_empty_sections else ("DE", [])
+        heading = PACK_LABELS.get(pack_key, pack_key) + " — best matches"
+        _render_section(parts, heading, items)
+    else:
+        if de:
+            _render_section(parts, "🇩🇪 Germany — best matches", de)
         if eu:
-            _render_section(parts, "🇪🇺 EU", eu)
+            _render_section(parts, "🇪🇺 European Union — best matches", eu)
         if uk:
-            _render_section(parts, "🇬🇧 UK", uk)
+            _render_section(parts, "🇬🇧 United Kingdom — best matches", uk)
         if af:
-            _render_section(parts, "🌍 Africa", af)
+            _render_section(parts, "🌍 Africa — best matches", af)
 
-        # Footer (always)
     parts.append(
-    """
-    <div style="margin-top:18px;color:#6b7280;font-size:12px;text-align:center">
-      RubixScout · New opportunities every week.
+        f"""
+    <div style="margin-top:18px;padding:16px 0;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;text-align:center">
+      <div style="font-weight:800;color:#111827;margin-bottom:6px">RubixScout</div>
+      <div>New funding opportunities every week.</div>
+      <div style="margin-top:10px">
+        <a href="{escape(unsubscribe_url)}" style="color:#2563eb;text-decoration:none;font-weight:800">Manage subscription</a>
+      </div>
     </div>
+
   </div>
 </body>
 </html>
 """
-)
+    )
 
     return "".join(parts)
 
@@ -287,7 +348,7 @@ def write_outputs(sections, out_dir="data"):
       - dict sections
       - list (single pack)
     Writes:
-      - digest.json (the normalized sections dict)
+      - digest.json (normalized sections dict)
       - digest.csv  (flattened rows with a 'section' column)
       - digest.html (rendered from sections)
     Returns: (json_path, csv_path, html_path)
@@ -301,13 +362,11 @@ def write_outputs(sections, out_dir="data"):
 
     normalized = _normalize_sections(sections)
 
-    # JSON (store normalized sections)
     json_path.write_text(
         json.dumps(normalized, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
-    # CSV (stable columns, flattened + section)
     cols = [
         "section",
         "title",
@@ -333,8 +392,10 @@ def write_outputs(sections, out_dir="data"):
                 row["section"] = section_key
                 w.writerow(row)
 
-    # HTML
-    html = render_digest_html(normalized, unsubscribe_url="https://rubixscout.com/unsubscribe")    
+    html = render_digest_html(
+        normalized,
+        unsubscribe_url="https://rubixscout.com/unsubscribe",
+    )
     html_path.write_text(html, encoding="utf-8")
 
     return str(json_path), str(csv_path), str(html_path)

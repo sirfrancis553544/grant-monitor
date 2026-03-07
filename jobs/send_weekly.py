@@ -56,7 +56,7 @@ def _pick_unsent(
     max_repeat: int = 2,
 ) -> List[Dict[str, Any]]:
     """
-    Filter: allow a grant to be emailed at most `max_repeat` times to the same subscriber.
+    Allow a grant to be emailed at most `max_repeat` times to the same subscriber.
     Assumes each grant has a 'fingerprint'.
     """
     fps = [g.get("fingerprint") for g in grants if g.get("fingerprint")]
@@ -79,11 +79,17 @@ def _pick_unsent(
 
 
 def _subject(pack: str) -> str:
-    return f"RubixScout — Weekly Grant Digest ({pack})"
+    pack_names = {
+        "DE": "Germany",
+        "EU": "European Union",
+        "UK": "United Kingdom",
+        "AFRICA": "Africa",
+    }
+    label = pack_names.get(pack, pack)
+    return f"RubixScout — Weekly Grant Digest ({label})"
 
 
 def _footer_html(app_url: str, unsub_url: str) -> str:
-    # Single, consistent footer. No second unsubscribe anywhere else.
     return f"""
     <div style="margin-top:24px;padding:16px 0;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;text-align:center">
       <div style="font-weight:800;color:#111827;margin-bottom:6px">RubixScout</div>
@@ -109,38 +115,38 @@ def main():
         sid = sub["id"]
         email = sub["email"]
         pack = (sub.get("pack") or "").strip().upper()
-        if not pack:
-            print(f"⚠️ Subscriber {email} has no pack. Skipping.")
-            log_send(
-                subscriber_id=sid,
-                pack="UNKNOWN",
-                item_count=0,
-                status="skipped",
-                error="missing_pack",
-            )
-            continue
-
-        if not has_grants_for_pack(pack):
-            print(f"⚠️ No grants found for subscriber pack {pack} ({email}). Skipping.")
-            log_send(
-                subscriber_id=sid,
-                pack=pack,
-                item_count=0,
-                status="skipped",
-                error="no_grants_for_pack",
-            )
-            continue
-         # 1) Pull candidates from Supabase (freshest first)
-        candidates = fetch_grants_for_pack(pack, limit=200)
 
         try:
-            # 1) Pull candidates from Supabase (freshest first)
+            # 1) Validate subscriber pack
+            if not pack:
+                print(f"⚠️ Subscriber {email} has no pack. Skipping.")
+                log_send(
+                    subscriber_id=sid,
+                    pack="UNKNOWN",
+                    item_count=0,
+                    status="skipped",
+                    error="missing_pack",
+                )
+                continue
+
+            # 2) Validate pack has grants available
+            if not has_grants_for_pack(pack):
+                print(f"⚠️ No grants found for subscriber pack {pack} ({email}). Skipping.")
+                log_send(
+                    subscriber_id=sid,
+                    pack=pack,
+                    item_count=0,
+                    status="skipped",
+                    error="no_grants_for_pack",
+                )
+                continue
+
+            # 3) Pull candidates from Supabase (freshest first)
             candidates = fetch_grants_for_pack(pack, limit=200)
 
-            # 2) Choose items excluding "sent twice already"
+            # 4) Choose items excluding grants already sent too often
             chosen = _pick_unsent(sid, candidates, max_items=12, max_repeat=2)
 
-            # If nothing eligible, skip sending
             if not chosen:
                 print(f"⚠️ No eligible grants for {email} ({pack}). Skipping send.")
                 log_send(
@@ -152,11 +158,11 @@ def main():
                 )
                 continue
 
-            # 3) Render email HTML (single pack list mode)
+            # 5) Render email HTML
             html = render_digest_html(chosen)
             subject = _subject(pack)
 
-            # 4) Inject ONE unsubscribe footer (ONLY here)
+            # 6) Inject footer
             unsub_token = sub.get("unsubscribe_token")
             unsub_url = (
                 f"{app_url}/unsubscribe?token={unsub_token}"
@@ -169,9 +175,9 @@ def main():
                 if "</body>" in html:
                     html = html.replace("</body>", f"{footer}</body>")
                 else:
-                    html = html + footer
+                    html += footer
 
-            # 5) Send email
+            # 7) Send email
             send_email(
                 subject=subject,
                 html=html,
@@ -179,13 +185,11 @@ def main():
                 reply_to=reply_to,
             )
 
-            # 6) Track what was actually sent (fingerprints)
+            # 8) Track what was actually sent
             sent_fps = [g["fingerprint"] for g in chosen if g.get("fingerprint")]
-
-            # Always bump counts (this enforces “max 2 times”)
             bump_sent(sid, sent_fps)
 
-            # Optional: also store per-week history rows if you have that table/function
+            # 9) Optional weekly history
             if add_send_history and sent_fps:
                 wk = week_key_today()
                 try:
@@ -196,10 +200,9 @@ def main():
                         week_key=wk,
                     )
                 except Exception as e:
-                    # don't break sending if history table isn't ready
                     print("⚠️ add_send_history failed:", str(e))
 
-            # 7) Log success
+            # 10) Log success
             log_send(
                 subscriber_id=sid,
                 pack=pack,
@@ -213,7 +216,7 @@ def main():
             try:
                 log_send(
                     subscriber_id=sid,
-                    pack=pack,
+                    pack=pack or "UNKNOWN",
                     item_count=0,
                     status="failed",
                     error=str(e)[:800],
@@ -221,7 +224,7 @@ def main():
             except Exception:
                 pass
 
-            print(f"❌ Failed {pack} to {email}: {e}")
+            print(f"❌ Failed {pack or 'UNKNOWN'} to {email}: {e}")
             print(traceback.format_exc())
 
 
