@@ -159,12 +159,14 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
         sb.table("grants").upsert(rows_full, on_conflict="fingerprint,pack").execute()
         return len(rows_full)
     except Exception as e1:
+        print("❌ FULL UPSERT FAILED:", str(e1))    
         # 2) Retry without "pack" (common cause if table doesn’t have pack column yet)
         try:
             rows_no_pack = [{k: v for k, v in r.items() if k != "pack"} for r in rows_full]
             sb.table("grants").upsert(rows_no_pack, on_conflict="fingerprint").execute()
             return len(rows_no_pack)
         except Exception as e2:
+            print("❌ NO-PACK UPSERT FAILED:", str(e2))
             # 3) Last resort: minimal safe payload
             rows_min = []
             for r in rows_full:
