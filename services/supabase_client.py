@@ -156,7 +156,7 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
 
     # 1) Try full upsert (may fail if older table missing columns like "pack", "raw", etc.)
     try:
-        sb.table("grants").upsert(rows_full, on_conflict="fingerprint").execute()
+        sb.table("grants").upsert(rows_full, on_conflict="fingerprint,pack").execute()
         return len(rows_full)
     except Exception as e1:
         # 2) Retry without "pack" (common cause if table doesn’t have pack column yet)

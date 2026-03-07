@@ -46,6 +46,27 @@
       ]
     },
     {
+      "title": "Förderung für Fachkräfte für Mobilität und Klimaschutz",
+      "funder": "foerderdatenbank_foerderprogramme",
+      "summary": "Sie möchten die Verkehrswende vor Ort aktiv gestalten? Das Ministerium für Verkehr (VM) unterstützt Sie bei der Finanzierung von Fachpersonal. Erhalten Sie Zuschüsse für neue Stellen in den Bereichen Fußverkehr, Elektromobilität, Parkraummanagement oder Klimamobilitätsplanung.",
+      "eligibility_notes": null,
+      "deadline_date": null,
+      "funding_amount_min": null,
+      "funding_amount_max": 78600.0,
+      "location_scope": "DE",
+      "themes": "[]",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Baden-Wuerttemberg/fachkraefte-mobilitaet-klimaschutz.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "source": "foerderdatenbank_foerderprogramme",
+      "date_found": "2026-03-07T10:00:29+00:00",
+      "confidence_score": 0.7,
+      "fingerprint": "a0f37ea73894becc8bff0a03d15cc5e54e4fe68d",
+      "_score": 3,
+      "_why": [
+        "title match: klima",
+        "scope includes DE"
+      ]
+    },
+    {
       "title": "zum Förderprogramm \"Programm zur Förderung von nichttechnischen Innovationen (ProNTI) in KMU\"",
       "funder": "Investitionsbank Berlin (IBB)",
       "summary": "",
@@ -69,7 +90,7 @@
       "title": "zum Förderprogramm \"Berliner Innovationsfachkräfte\"",
       "funder": "Investitionsbank Berlin (IBB)",
       "summary": "",
-      "eligibility_notes": "antragsberechtigt. Möchten Sie Förderprogramme kombinieren? Eine Kombination mit Zuwendungen für Personalkosten aus anderen Programmen oder Maßnahmen der Arbeitsagenturen ist nicht zulässig. Downloads",
+      "eligibility_notes": "antragsberechtigt. Möchten Sie Förderprogramme kombinieren? Eine Kombination mit Zuwendungen für Personalkosten aus anderen Programmen oder Maßnahmen der Arbeitsagenturen ist nicht zulässig. $",
       "deadline_date": null,
       "funding_amount_min": null,
       "funding_amount_max": 40000.0,
@@ -86,25 +107,45 @@
       ]
     },
     {
-      "title": "Anteilige Finanzierung der Entwicklungskosten ziviler Luftfahrzeughersteller und Luftfahrtausrüster (Luftfahrt-Entwicklungs-Darlehen)",
+      "title": "Förderung qualifizierter Fachkonzepte im Kontext nachhaltiger Mobilität",
       "funder": "foerderdatenbank_foerderprogramme",
-      "summary": "Wenn Sie als Luftfahrtunternehmen im Bereich der zivilen kommerziellen Luftfahrt forschen und entwickeln, können Sie unter bestimmten Voraussetzungen ein Darlehen erhalten.",
+      "summary": "Sie planen die Mobilität vor Ort nachhaltig zu gestalten? Das Land Baden-Württemberg unterstützt Sie bei der Erstellung qualifizierter Fachkonzepte für Verkehr und Klimaschutz. Erhalten Sie Zuschüsse für Radverkehrskonzepte, Klimamobilitätspläne oder Parkraummodelle.",
       "eligibility_notes": null,
-      "deadline_date": "2028-12-31",
+      "deadline_date": null,
       "funding_amount_min": null,
-      "funding_amount_max": 25000000.0,
+      "funding_amount_max": null,
       "location_scope": "DE",
       "themes": "[]",
-      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMWi/luftfahrt-entwicklungs-darlehen.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Baden-Wuerttemberg/fachkonzepte-nachhaltige-mobilitaet.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
       "source": "foerderdatenbank_foerderprogramme",
-      "date_found": "2026-02-23T20:44:04+00:00",
-      "confidence_score": 0.9,
-      "fingerprint": "1b0ddf3fa78d61b61ccb57bc4d2a54e8912c9a4a",
+      "date_found": "2026-03-07T10:00:29+00:00",
+      "confidence_score": 0.6,
+      "fingerprint": "4baa89e1404f746695a099cf6f24b53242951240",
       "_score": 2,
       "_why": [
-        "title match: entwicklung",
-        "scope includes DE",
-        "deadline beyond 90d"
+        "summary match: klima",
+        "scope includes DE"
+      ]
+    },
+    {
+      "title": "Förderung für internationale Verbundvorhaben im Rahmen der Nationalen Bioökonomiestrategie 2027 Japan/Queensland",
+      "funder": "foerderdatenbank_foerderprogramme",
+      "summary": "Das Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR) fördert Ihre internationalen Verbundvorhaben mit bis zu 600.000 EUR.",
+      "eligibility_notes": null,
+      "deadline_date": "2026-06-03",
+      "funding_amount_min": null,
+      "funding_amount_max": 600000.0,
+      "location_scope": "DE",
+      "themes": "[]",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMBF/biooekonomie-international-japan2027.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "source": "foerderdatenbank_foerderprogramme",
+      "date_found": "2026-03-07T10:00:28+00:00",
+      "confidence_score": 0.9,
+      "fingerprint": "29b9bc003eeec9409054a457c95d555310d930f0",
+      "_score": 2,
+      "_why": [
+        "summary match: forschung",
+        "scope includes DE"
       ]
     },
     {
@@ -128,6 +169,28 @@
         "summary match: digitalisierung",
         "scope includes DE",
         "deadline passed"
+      ]
+    },
+    {
+      "title": "Anteilige Finanzierung der Entwicklungskosten ziviler Luftfahrzeughersteller und Luftfahrtausrüster (Luftfahrt-Entwicklungs-Darlehen)",
+      "funder": "foerderdatenbank_foerderprogramme",
+      "summary": "Wenn Sie als Luftfahrtunternehmen im Bereich der zivilen kommerziellen Luftfahrt forschen und entwickeln, können Sie unter bestimmten Voraussetzungen ein Darlehen erhalten.",
+      "eligibility_notes": null,
+      "deadline_date": "2028-12-31",
+      "funding_amount_min": null,
+      "funding_amount_max": 25000000.0,
+      "location_scope": "DE",
+      "themes": "[]",
+      "url": "https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMWi/luftfahrt-entwicklungs-darlehen.html?etcc_cmp=RSS&etcc_med=RSS-Feed&et_cmp_seg5=RSS-Feed",
+      "source": "foerderdatenbank_foerderprogramme",
+      "date_found": "2026-02-23T20:44:04+00:00",
+      "confidence_score": 0.9,
+      "fingerprint": "1b0ddf3fa78d61b61ccb57bc4d2a54e8912c9a4a",
+      "_score": 2,
+      "_why": [
+        "title match: entwicklung",
+        "scope includes DE",
+        "deadline beyond 90d"
       ]
     },
     {
@@ -202,27 +265,6 @@
       ]
     },
     {
-      "title": "Innovate UK Innovation Loans Round 25",
-      "funder": "Innovate UK",
-      "summary": "UK registered micro, small or medium sized enterprises (SME) can apply for loans for close to market innovative projects with strong commercial potential. They must significantly improve the UK economy and drive societal benefit. Eligibility This competition is open to single applicants from micro,",
-      "eligibility_notes": "",
-      "deadline_date": "2026-03-04",
-      "funding_amount_min": null,
-      "funding_amount_max": null,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2373/overview/609dc5dd-d3e8-4f51-af3a-3eb1b3314710",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
-      "confidence_score": 0.5,
-      "fingerprint": "fd6005c347ccfc963f9ee75f7c77fef951f5a496",
-      "_score": 3,
-      "_why": [
-        "summary match: sme",
-        "title match: innovation"
-      ]
-    },
-    {
       "title": "Cyber Security Academic Startup Accelerator Programme Y10 Phase 1",
       "funder": "Innovate UK",
       "summary": "UK registered academic institutions can apply for a share of up to £800,000 to join the Cyber Security Academic Startup Accelerator Programme (CyberASAP). This funding is from the Department for Science, Innovation and Technology (DSIT). Eligibility This competition is open to single applicants and",
@@ -246,23 +288,43 @@
       ]
     },
     {
-      "title": "Full ADOPT Grant: Round 6",
+      "title": "ADOPT Facilitator Support Grant: Round 7",
       "funder": "Innovate UK",
-      "summary": "Farming, growing or forestry businesses based in England can apply for a share of up to £5 million for on-farm trial and demonstration projects, to improve adoption of new ideas or solutions in the agricultural sector. Eligibility This competition is open to collaborations only. To lead a project yo",
+      "summary": "Farming, growing or forestry businesses based in England can apply for a grant of £2,500, to engage an external Project Facilitator to support the development of a Full ADOPT Grant application. Eligibility This competition is open to single applicants only. To lead a project your organisation must:",
       "eligibility_notes": "",
-      "deadline_date": "2026-04-08",
+      "deadline_date": "2026-04-15",
       "funding_amount_min": null,
-      "funding_amount_max": 5000000.0,
+      "funding_amount_max": 2500.0,
       "location_scope": "UK",
       "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2385/overview/2343c344-807d-41a1-9551-05ac5420ba11",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2404/overview/99693fa4-0f17-4de8-b812-34f2be37a4d0",
       "source": "innovate_uk_competitions",
-      "date_found": "2026-02-23T20:44:32+00:00",
+      "date_found": "2026-03-07T10:00:57+00:00",
       "confidence_score": 0.5,
-      "fingerprint": "9b0d4b91a27fde8a6b8513af8b04bdcb643e4539",
+      "fingerprint": "6a92d709b8aea6d56bce961f0a19f1e2c3720e25",
       "_score": 2,
       "_why": [
         "title match: grant"
+      ]
+    },
+    {
+      "title": "SNPN 5G Assured Integration (CR&D)",
+      "funder": "Innovate UK",
+      "summary": "UK registered organisations can apply for a share of up to £18.5 million to integrate UK anchored advanced connectivity components at a system level into technically assured, end to end architectures ready for early market evaluation. Eligibility This competition is open to collaborations only. To l",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-01",
+      "funding_amount_min": null,
+      "funding_amount_max": 18500000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2400/overview/cbbc48e2-d78e-42cd-b570-330f702ba82f",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-03-07T10:00:57+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "4fe9e5bec1ad6862e05a168d026b0004da928669",
+      "_score": 2,
+      "_why": [
+        "title match: r&d"
       ]
     },
     {
@@ -415,6 +477,28 @@
       ]
     },
     {
+      "title": "SNPN 5G Assured Integration (CR&D)",
+      "funder": "Innovate UK",
+      "summary": "UK registered organisations can apply for a share of up to £18.5 million to integrate UK anchored advanced connectivity components at a system level into technically assured, end to end architectures ready for early market evaluation. Eligibility This competition is open to collaborations only. To l",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-01",
+      "funding_amount_min": null,
+      "funding_amount_max": 18500000.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2400/overview/cbbc48e2-d78e-42cd-b570-330f702ba82f",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-03-07T10:00:57+00:00",
+      "confidence_score": 0.5,
+      "fingerprint": "4fe9e5bec1ad6862e05a168d026b0004da928669",
+      "_score": 4,
+      "_why": [
+        "summary match: competition",
+        "title match: r&d",
+        "scope includes UK"
+      ]
+    },
+    {
       "title": "UK-Germany Collaborative Innovation for Quantum Technologies 2026",
       "funder": "Innovate UK",
       "summary": "UK registered organisations can apply for a share of up to £3 million for innovative projects in quantum. This funding is from Innovate UK, part of UK Research and Innovation (UKRI). Eligibility This competition is open to collaborations only. To lead a collaborative project your organisation must b",
@@ -500,28 +584,6 @@
       "_why": [
         "summary match: competition",
         "title match: ai",
-        "scope includes UK"
-      ]
-    },
-    {
-      "title": "Ofgem Strategic Innovation Fund Round 5 Discovery C5",
-      "funder": "Innovate UK",
-      "summary": "Organisations can apply for a share of up to £30 million exclusive of VAT, for collaborative Discovery Phase Projects that meet the Round 5 challenges. This funding is from the Ofgem Strategic Innovation Fund. Eligibility This competition is open to collaborations only. To lead a Discovery Phase Pro",
-      "eligibility_notes": "",
-      "deadline_date": "2026-02-25",
-      "funding_amount_min": null,
-      "funding_amount_max": 30000000.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2346/overview/e172ee7c-3050-4d47-bf11-235cfe76c1e1",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-19T20:44:49+00:00",
-      "confidence_score": 0.5,
-      "fingerprint": "f543966bbd05185e08ea23fdc5dfba9f0ac9a2a0",
-      "_score": 4,
-      "_why": [
-        "title match: innovation",
-        "summary match: competition",
         "scope includes UK"
       ]
     },
@@ -616,25 +678,24 @@
       ]
     },
     {
-      "title": "TEF Entrepreneurship Programme (Africa) — 2026 Applications Open",
-      "funder": "Tony Elumelu Foundation (TEF)",
-      "summary": "Seed capital + training + mentorship for entrepreneurs across all 54 African countries (apply via TEFConnect).",
-      "eligibility_notes": "2. Applications from applicants who either have a business idea or have a business no older than 5 years.",
-      "deadline_date": "2026-03-01",
+      "title": "ADOPT Facilitator Support Grant: Round 7",
+      "funder": "Innovate UK",
+      "summary": "Farming, growing or forestry businesses based in England can apply for a grant of £2,500, to engage an external Project Facilitator to support the development of a Full ADOPT Grant application. Eligibility This competition is open to single applicants only. To lead a project your organisation must:",
+      "eligibility_notes": "",
+      "deadline_date": "2026-04-15",
       "funding_amount_min": null,
-      "funding_amount_max": 5000.0,
-      "location_scope": "Africa",
-      "themes": "[\"startup\", \"seed\", \"training\"]",
-      "url": "https://www.tonyelumelufoundation.org/press-releases/apply-tef-entrepreneurship-programme-2026",
-      "source": "tef_entrepreneurship",
-      "date_found": "2026-01-18T15:11:01+00:00",
+      "funding_amount_max": 2500.0,
+      "location_scope": "UK",
+      "themes": "[\"grant\", \"competition\"]",
+      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2404/overview/99693fa4-0f17-4de8-b812-34f2be37a4d0",
+      "source": "innovate_uk_competitions",
+      "date_found": "2026-03-07T10:00:57+00:00",
       "confidence_score": 0.5,
-      "fingerprint": "5b22027fd59ce9e82a93abd6b7354400a9975eef",
-      "_score": 4,
+      "fingerprint": "6a92d709b8aea6d56bce961f0a19f1e2c3720e25",
+      "_score": 3,
       "_why": [
-        "title match: entrepreneurship",
-        "summary match: seed",
-        "scope includes AFRICA"
+        "title match: grant",
+        "summary match: farming"
       ]
     },
     {
@@ -659,24 +720,26 @@
       ]
     },
     {
-      "title": "ADOPT Facilitator Support Grant: Round 6",
-      "funder": "Innovate UK",
-      "summary": "Farming, growing or forestry businesses based in England can apply for a grant of £2,500, to engage an external Project Facilitator to support the development of a Full ADOPT Grant application. Eligibility This competition is open to single applicants only. To lead a project your organisation must:",
-      "eligibility_notes": "",
-      "deadline_date": "2026-02-25",
+      "title": "TEF Entrepreneurship Programme (Africa) — 2026 Applications Open",
+      "funder": "Tony Elumelu Foundation (TEF)",
+      "summary": "Seed capital + training + mentorship for entrepreneurs across all 54 African countries (apply via TEFConnect).",
+      "eligibility_notes": "2. Applications from applicants who either have a business idea or have a business no older than 5 years.",
+      "deadline_date": "2026-03-01",
       "funding_amount_min": null,
-      "funding_amount_max": 2500.0,
-      "location_scope": "UK",
-      "themes": "[\"grant\", \"competition\"]",
-      "url": "https://apply-for-innovation-funding.service.gov.uk/competition/2371/overview/471bfe91-9f9c-4086-a28a-15296f1957e2",
-      "source": "innovate_uk_competitions",
-      "date_found": "2026-01-18T15:10:59+00:00",
+      "funding_amount_max": 5000.0,
+      "location_scope": "Africa",
+      "themes": "[\"startup\", \"seed\", \"training\"]",
+      "url": "https://www.tonyelumelufoundation.org/press-releases/apply-tef-entrepreneurship-programme-2026",
+      "source": "tef_entrepreneurship",
+      "date_found": "2026-01-18T15:11:01+00:00",
       "confidence_score": 0.5,
-      "fingerprint": "9ea219c0be64b22e552a7095f9264c37bece98c7",
-      "_score": 3,
+      "fingerprint": "5b22027fd59ce9e82a93abd6b7354400a9975eef",
+      "_score": 2,
       "_why": [
-        "title match: grant",
-        "summary match: farming"
+        "title match: entrepreneurship",
+        "summary match: seed",
+        "scope includes AFRICA",
+        "deadline passed"
       ]
     },
     {
