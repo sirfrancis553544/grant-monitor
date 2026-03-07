@@ -1,18 +1,37 @@
 sources:
+  # ----------------------------
+  # GERMANY
+  # ----------------------------
   - id: foerderdatenbank_foerderprogramme
     type: rss
+    name: "Förderdatenbank Programme"
+    funder: "Förderdatenbank"
+    location_scope: "DE"
+    themes: ["grant", "innovation", "sme"]
     url: "https://www.foerderdatenbank.de/FDB/DE/Service/RSS/Functions/foerderprogram_rssnewsfeed.xml"
 
   - id: kfw_press
     type: rss
+    name: "KfW Press"
+    funder: "KfW"
+    location_scope: "DE"
+    themes: ["finance", "sme"]
     url: "http://www.kfw.de/kfw/de/KfW-Konzern/Medien/RssPressDe.xml"
 
   - id: kfw_news
     type: rss
+    name: "KfW News"
+    funder: "KfW"
+    location_scope: "DE"
+    themes: ["finance", "sme"]
     url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssNewsDe.xml"
 
   - id: kfw_research
     type: rss
+    name: "KfW Research"
+    funder: "KfW"
+    location_scope: "DE"
+    themes: ["research", "economy"]
     url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssResearchDe.xml"
 
   - id: berlin_ibb_programs
@@ -23,112 +42,155 @@ sources:
     themes: ["startup", "innovation", "sme"]
     url: "https://www.ibb.de/de/foerderprogramme.html"
 
-  - id: berlin_ibb_programs
+  # Future DE sources - require parser support
+  - id: exist_programme
     type: html
-    funder: "Investitionsbank Berlin (IBB)"
-    location_scope: "Berlin"
-    themes: ["startup", "innovation", "sme"]
-    url: "https://www.ibb.de/de/wirtschaftsfoerderung/foerderprogramme-a-z/foerderprogramme-a-z.html"
-  # --- EU (Bonus group) ---
-  - id: eu_funding_tenders_calls
-    name: EU Funding & Tenders – Calls
-    type: html
-    funder: European Commission
-    location_scope: EU
-    themes: ["grants", "SME", "innovation"]
-    url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals"
-    group: bonus
+    name: "EXIST Programme"
+    funder: "BMWK / EXIST"
+    location_scope: "DE"
+    themes: ["startup", "university", "innovation"]
+    url: "https://www.exist.de"
+    enabled: false
 
-  - id: eic_funding
-    name: European Innovation Council (EIC)
+  - id: zim_programme
     type: html
-    funder: European Innovation Council
-    location_scope: EU
-    themes: ["startup", "deeptech", "equity"]
-    url: "https://eic.ec.europa.eu/eic-funding-opportunities_en"
-    group: bonus
+    name: "ZIM Programme"
+    funder: "BMWK"
+    location_scope: "DE"
+    themes: ["innovation", "r&d", "sme"]
+    url: "https://www.zim.de"
+    enabled: false
 
+  # ----------------------------
+  # EUROPEAN UNION
+  # ----------------------------
   - id: eic_accelerator
-    name: eic_accelerator
     type: custom
+    name: "EIC Accelerator"
     funder: "European Innovation Council (EIC)"
     location_scope: "EU"
     themes: ["startup", "deeptech", "grant", "equity"]
     url: "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
 
-  # --- UK ---
-  - id: uk_innovate_competitions
-    name: Innovate UK Competitions
+  - id: eu_funding_tenders_calls
     type: html
-    funder: Innovate UK (UKRI)
-    location_scope: EU
-    themes: ["R&D", "innovation"]
-    url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
-    group: bonus
+    name: "EU Funding & Tenders Calls"
+    funder: "European Commission"
+    location_scope: "EU"
+    themes: ["grant", "sme", "innovation"]
+    url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals"
 
+  # Future EU sources - require parser support
+  - id: eit_funding
+    type: html
+    name: "European Institute of Innovation & Technology"
+    funder: "EIT"
+    location_scope: "EU"
+    themes: ["innovation", "startup", "scaleup"]
+    url: "https://eit.europa.eu/our-activities/opportunities"
+    enabled: false
+
+  - id: cascade_funding_eu
+    type: html
+    name: "EU Cascade Funding"
+    funder: "European Commission / Consortia"
+    location_scope: "EU"
+    themes: ["startup", "innovation", "sme"]
+    url: "https://cascadefunding.eu"
+    enabled: false
+
+  - id: eurostars
+    type: html
+    name: "Eurostars"
+    funder: "Eureka / Eurostars"
+    location_scope: "EU"
+    themes: ["r&d", "sme", "innovation"]
+    url: "https://www.eurekanetwork.org/programmes/eurostars/"
+    enabled: false
+
+  # ----------------------------
+  # UNITED KINGDOM
+  # ----------------------------
   - id: innovate_uk_competitions
-    name: innovate_uk_competitions
     type: custom
+    name: "Innovate UK Competitions"
     funder: "Innovate UK"
     location_scope: "UK"
-    themes: ["grant", "competition"]
+    themes: ["grant", "competition", "r&d", "innovation"]
     url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
 
-  # --- France ---
-  - id: bpifrance_calls
-    name: Bpifrance – Appels à projets
+  # Future UK sources - require parser support
+  - id: ukri_funding
     type: html
-    funder: Bpifrance
-    location_scope: EU
-    themes: ["startup", "innovation"]
-    url: "https://www.bpifrance.fr/nos-appels-a-projets-concours"
-    group: bonus
+    name: "UKRI Funding Finder"
+    funder: "UKRI"
+    location_scope: "UK"
+    themes: ["research", "innovation", "grant"]
+    url: "https://www.ukri.org/opportunity/"
+    enabled: false
 
-  # --- Netherlands ---
-  - id: rvo_subsidies
-    name: RVO – Subsidies & Financing
+  - id: dsit_opportunities
     type: html
-    funder: RVO Netherlands
-    location_scope: EU
-    themes: ["SME", "sustainability"]
-    url: "https://english.rvo.nl/subsidies-financing"
-    group: bonus
+    name: "DSIT Opportunities"
+    funder: "DSIT"
+    location_scope: "UK"
+    themes: ["tech", "ai", "innovation"]
+    url: "https://www.gov.uk/government/organisations/department-for-science-innovation-and-technology"
+    enabled: false
 
-  # --- Africa ---
-  - id: tef_programme
-    name: Tony Elumelu Foundation
-    type: html
-    funder: Tony Elumelu Foundation
-    location_scope: Africa
-    themes: ["startup", "seed"]
-    url: "https://www.tonyelumelufoundation.org/tef-entrepreneurship-programme"
-    group: bonus
-
-  - id: aecf_opportunities
-    name: AECF Funding Opportunities
-    type: html
-    funder: Africa Enterprise Challenge Fund
-    location_scope: Africa
-    themes: ["challenge_fund", "SME"]
-    url: "https://www.aecfafrica.org/im-looking-to/see-aecfs-funding-opportunities/"
-    group: bonus
-
-  - id: gsma_innovation_fund
-    name: GSMA Innovation Fund
-    type: html
-    funder: GSMA
-    location_scope: Africa
-    themes: ["tech", "mobile"]
-    url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
-    group: bonus
-
+  # ----------------------------
+  # AFRICA
+  # ----------------------------
   - id: tef_entrepreneurship
-    name: tef_entrepreneurship
     type: custom
-    funder: "Tony Elumelu Foundation (TEF)"
+    name: "Tony Elumelu Foundation (TEF)"
+    funder: "Tony Elumelu Foundation"
     location_scope: "Africa"
     themes: ["startup", "seed", "training"]
     url: "https://www.tonyelumelufoundation.org/press-releases/apply-tef-entrepreneurship-programme-2026"
     programme_url: "https://www.tonyelumelufoundation.org/tef-entrepreneurship-programme"
 
+  - id: aecf_opportunities
+    type: html
+    name: "AECF Funding Opportunities"
+    funder: "Africa Enterprise Challenge Fund"
+    location_scope: "Africa"
+    themes: ["challenge_fund", "sme", "startup", "climate"]
+    url: "https://www.aecfafrica.org/im-looking-to/see-aecfs-funding-opportunities/"
 
+  # Future Africa sources - require parser support
+  - id: gsma_innovation_fund
+    type: html
+    name: "GSMA Innovation Fund"
+    funder: "GSMA"
+    location_scope: "Africa"
+    themes: ["tech", "mobile", "startup"]
+    url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
+    enabled: false
+
+  - id: afdb_opportunities
+    type: html
+    name: "African Development Bank Opportunities"
+    funder: "African Development Bank"
+    location_scope: "Africa"
+    themes: ["business", "sme", "innovation", "development"]
+    url: "https://www.afdb.org/en/projects-and-operations/procurement"
+    enabled: false
+
+  - id: mercycorps_ventures
+    type: html
+    name: "Mercy Corps Ventures"
+    funder: "Mercy Corps Ventures"
+    location_scope: "Africa"
+    themes: ["startup", "seed", "fintech", "climate"]
+    url: "https://www.mercycorpsventures.org"
+    enabled: false
+
+  - id: village_capital_africa
+    type: html
+    name: "Village Capital Africa"
+    funder: "Village Capital"
+    location_scope: "Africa"
+    themes: ["startup", "accelerator", "investment"]
+    url: "https://vilcap.com"
+    enabled: false
