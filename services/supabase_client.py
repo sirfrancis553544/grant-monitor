@@ -129,7 +129,6 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
             {
                 "fingerprint": fp,
                 "canonical_url": normalize_url(url) or None,
-                # pack is optional and may not exist in your grants table
                 "pack": (pack or g.get("pack") or g.get("section") or None),
                 "title": g.get("title"),
                 "summary": g.get("summary"),
@@ -142,10 +141,9 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
                 "location_scope": g.get("location_scope"),
                 "themes": g.get("themes"),
                 "source": g.get("source"),
-                "date_found": g.get("date_found") or now,
                 "last_seen": now,
                 "confidence_score": g.get("confidence_score") or g.get("_score"),
-                "raw": g,  # jsonb column
+                "raw": g,
             }
         )
 
@@ -158,36 +156,9 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
     try:
         sb.table("grants").upsert(rows_full, on_conflict="fingerprint,pack").execute()
         return len(rows_full)
-    except Exception as e1:
-        print("❌ FULL UPSERT FAILED:", str(e1))    
-        # 2) Retry without "pack" (common cause if table doesn’t have pack column yet)
-        try:
-            rows_no_pack = [{k: v for k, v in r.items() if k != "pack"} for r in rows_full]
-            sb.table("grants").upsert(rows_no_pack, on_conflict="fingerprint").execute()
-            return len(rows_no_pack)
-        except Exception as e2:
-            print("❌ NO-PACK UPSERT FAILED:", str(e2))
-            # 3) Last resort: minimal safe payload
-            rows_min = []
-            for r in rows_full:
-                rows_min.append(
-                    {
-                        "fingerprint": r.get("fingerprint"),
-                        "title": r.get("title"),
-                        "summary": r.get("summary"),
-                        "url": r.get("url"),
-                        "source": r.get("source"),
-                        # if these columns exist, great; if not, this may still fail
-                        "deadline_date": r.get("deadline_date"),
-                        "funding_amount_min": r.get("funding_amount_min"),
-                        "funding_amount_max": r.get("funding_amount_max"),
-                        "location_scope": r.get("location_scope"),
-                        "themes": r.get("themes"),
-                    }
-                )
-
-            sb.table("grants").upsert(rows_min, on_conflict="fingerprint").execute()
-            return len(rows_min)
+    except Exception as e:
+        print("❌ GRANTS UPSERT FAILED:", str(e))
+        raise
 
 
 def fetch_latest_grants(limit: int = 500) -> List[Dict[str, Any]]:
