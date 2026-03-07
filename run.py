@@ -1,5 +1,3 @@
-# run.py
-
 from __future__ import annotations
 
 import argparse
@@ -52,6 +50,27 @@ def load_profiles():
     }
 
 
+def apply_source_cap(items: list[dict], max_per_source: int = 3) -> list[dict]:
+    """
+    Keep ranked order, but limit how many items from the same source
+    can appear in the final digest list.
+    """
+    out: list[dict] = []
+    counts: dict[str, int] = {}
+
+    for g in items:
+        source = (g.get("source") or "unknown").strip()
+        current = counts.get(source, 0)
+
+        if current >= max_per_source:
+            continue
+
+        out.append(g)
+        counts[source] = current + 1
+
+    return out
+
+
 def _has_column(conn, table: str, col: str) -> bool:
     """
     SQLite schema check. Prevents crashes like:
@@ -76,7 +95,11 @@ def main():
     profiles = load_profiles()
     sources_cfg = load_yaml("sources.yaml")
 
-    BONUS_SOURCES = {"tef_entrepreneurship", "eic_accelerator", "innovate_uk_competitions"}
+    BONUS_SOURCES = {
+        "tef_entrepreneurship",
+        "eic_accelerator",
+        "innovate_uk_competitions",
+    }
 
     conn = get_conn(DB_PATH)
     init_db(conn)
@@ -116,7 +139,9 @@ def main():
                 # --- Enrichment from detail page ---
                 if (
                     g.get("source") == "berlin_ibb_programs"
-                    and g.get("url", "").startswith("https://www.ibb.de/de/foerderprogramme/")
+                    and g.get("url", "").startswith(
+                        "https://www.ibb.de/de/foerderprogramme/"
+                    )
                 ):
                     extra = enrich_berlin_ibb_program(g["url"]) or {}
 
@@ -240,7 +265,7 @@ def main():
                 }
                 if g["title"] and g["url"]:
                     items.append(g)
-                    
+
         # --- Innovate UK competitions ---
         elif s.get("id") == "innovate_uk_competitions":
             raw_items = fetch_innovate_uk_competitions(s["url"]) or []
@@ -269,7 +294,10 @@ def main():
             items = fetch_rss(
                 feed_url=s["url"],
                 source_name=s.get("name") or s.get("id") or "unknown_source",
-                default_funder=s.get("funder") or s.get("name") or s.get("id") or "unknown_funder",
+                default_funder=s.get("funder")
+                or s.get("name")
+                or s.get("id")
+                or "unknown_funder",
                 location_scope=s.get("location_scope", "DE"),
                 themes=s.get("themes", []),
             )
@@ -284,7 +312,6 @@ def main():
 
     # ------------------------------------
     # 2) Pull recent items and normalize
-    #    ✅ FIX: don't ORDER BY last_seen if column doesn't exist
     # ------------------------------------
     order_col = "last_seen" if _has_column(conn, "grants", "last_seen") else "date_found"
     rows = conn.execute(
@@ -323,14 +350,13 @@ def main():
     # ------------------------------------
     # 3) Score per profile and build sections
     # ------------------------------------
-
     STORE_LIMIT_PER_PACK = 200
 
     sections: dict[str, list[dict]] = {}
     store_sections: dict[str, list[dict]] = {}
 
     for key, prof in profiles.items():
-        scored = []
+        scored: list[dict] = []
         for g in normalized:
             sc, why = score_grant(g, prof)
             gg = dict(g)
@@ -338,11 +364,11 @@ def main():
             gg["_why"] = why
             scored.append(gg)
 
-        # sort by score
+        # Sort by score first
         scored.sort(key=lambda x: x.get("_score", 0), reverse=True)
 
         # Deduplicate by canonical URL
-        deduped = {}
+        deduped: dict[str, dict] = {}
         for g in scored:
             k = canonical_url(g.get("url")) or (g.get("title") or "").strip().lower()
             if k not in deduped or g.get("_score", 0) > deduped[k].get("_score", 0):
@@ -351,20 +377,26 @@ def main():
         scored = list(deduped.values())
         scored.sort(key=lambda x: x.get("_score", 0), reverse=True)
 
+        # Apply source diversity cap before final selection
+        capped_for_email = apply_source_cap(scored, max_per_source=3)
+
         # small list → email output
         top_n = int(prof.get("top_n", 10))
-        sections[key] = scored[:top_n]
+        sections[key] = capped_for_email[:top_n]
 
-        # big list → storage pool
-        store_sections[key] = scored[:STORE_LIMIT_PER_PACK]
-
+        # storage pool can stay broader, but still optionally capped lightly
+        capped_for_store = apply_source_cap(scored, max_per_source=10)
+        store_sections[key] = capped_for_store[:STORE_LIMIT_PER_PACK]
 
     # ------------------------------------
     # 4) Apply your “main vs bonus” rule
     # ------------------------------------
-
-    sections["DE"] = [g for g in sections.get("DE", []) if g.get("source") not in BONUS_SOURCES]
-    store_sections["DE"] = [g for g in store_sections.get("DE", []) if g.get("source") not in BONUS_SOURCES]
+    sections["DE"] = [
+        g for g in sections.get("DE", []) if g.get("source") not in BONUS_SOURCES
+    ]
+    store_sections["DE"] = [
+        g for g in store_sections.get("DE", []) if g.get("source") not in BONUS_SOURCES
+    ]
 
     sections.setdefault("EU", [])
     sections.setdefault("UK", [])
@@ -374,11 +406,9 @@ def main():
     store_sections.setdefault("UK", [])
     store_sections.setdefault("AFRICA", [])
 
-
     # ------------------------------------
     # 4.5) Upsert larger pool into Supabase
     # ------------------------------------
-
     try:
         supa_total = 0
         for pack, items in store_sections.items():
@@ -442,6 +472,3 @@ if __name__ == "__main__":
 #   .venv\Scripts\activate
 #   python run.py
 #   python run.py --send
-
-# .venv\Scripts\activate
-# python run.py --send
