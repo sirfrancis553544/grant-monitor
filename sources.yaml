@@ -79,6 +79,7 @@ sources:
     location_scope: "EU"
     themes: ["grant", "sme", "innovation"]
     url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals"
+    enabled: false
 
   # Future EU sources - require parser support
   - id: eit_funding
