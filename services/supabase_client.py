@@ -97,23 +97,12 @@ def log_send(
 # Grants storage (scan -> Supabase)
 # ----------------------------
 def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> int:
-    """
-    Upserts grants into public.grants using fingerprint.
-
-    IMPORTANT:
-    - We try a "full" payload first (includes newer columns like last_seen/raw/etc).
-    - If your grants table is older / missing some columns (e.g., pack), we retry
-      with a smaller, safer payload to avoid breaking your scan.
-
-    Returns: number of rows attempted (not exact inserts).
-    """
     if not grants:
         return 0
 
     now = _utc_now_iso()
-
-    # Full rows (best schema)
     rows_full: List[Dict[str, Any]] = []
+
     for g in grants:
         if not isinstance(g, dict):
             continue
@@ -124,12 +113,18 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
             continue
 
         fp = g.get("fingerprint") or grant_fingerprint(title, url)
+        resolved_pack = (pack or g.get("pack") or g.get("section") or None)
+        if resolved_pack:
+            resolved_pack = str(resolved_pack).strip().upper()
+
+        if not resolved_pack:
+            continue
 
         rows_full.append(
             {
                 "fingerprint": fp,
                 "canonical_url": normalize_url(url) or None,
-                "pack": (pack or g.get("pack") or g.get("section") or None),
+                "pack": resolved_pack,
                 "title": g.get("title"),
                 "summary": g.get("summary"),
                 "eligibility_notes": g.get("eligibility_notes"),
@@ -152,7 +147,6 @@ def upsert_grants(grants: List[Dict[str, Any]], pack: Optional[str] = None) -> i
 
     sb = _sb()
 
-    # 1) Try full upsert (may fail if older table missing columns like "pack", "raw", etc.)
     try:
         sb.table("grants").upsert(rows_full, on_conflict="fingerprint,pack").execute()
         return len(rows_full)
