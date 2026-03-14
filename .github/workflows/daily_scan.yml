@@ -1,5 +1,8 @@
 name: Daily Grant Scan
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: "0 6 * * *" # daily 06:00 UTC
@@ -8,9 +11,11 @@ on:
 jobs:
   scan:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
