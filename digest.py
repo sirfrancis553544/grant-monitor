@@ -284,9 +284,23 @@ def render_digest_html(
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse">
           <tr>
             <td style="vertical-align:top;padding-right:12px">
-              <div style="height:42px;width:42px;border-radius:10px;background:#2563eb;color:#ffffff;font-weight:900;font-size:18px;display:grid;place-items:center;margin-bottom:14px">
-                R
-              </div>
+              <div style="
+  height:42px;
+  width:52px;
+  border-radius:10px;
+  background:#2563eb;
+  color:#ffffff;
+  font-weight:900;
+  font-size:14px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  margin-bottom:14px;
+">
+  RBX
+</div>
 
               <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#475569">
                 RubixScout · Weekly Grant Digest
