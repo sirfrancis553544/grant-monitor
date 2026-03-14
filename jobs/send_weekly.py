@@ -160,8 +160,8 @@ def _replace_pack_labels(html: str, pack: str) -> str:
     replacements = [
         ("Pack Germany", f"Pack {label}"),
         ("🇩🇪 Germany", f"{flag} {label}"),
-        ("Germany — best matches", f"{flag} {label} — best matches"),
-        (">Germany — best matches<", f">{flag} {label} — best matches<"),
+        ("Germany best matches", f"{flag} {label} best matches"),
+        (">Germany best matches<", f">{flag} {label} best matches<"),
         (">Pack Germany<", f">Pack {label}<"),
         ("(Germany)", f"({label})"),
     ]
