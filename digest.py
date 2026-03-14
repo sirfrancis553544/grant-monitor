@@ -85,19 +85,52 @@ def render_card(g: dict):
     funding = _fmt_money(g.get("funding_amount_max"))
     why_list = _normalize_why(g.get("_why"))
 
+    fit_score = g.get("fit_score")
+    radar = g.get("deadline_radar") or {}
+    effort = g.get("application_effort") or {}
+
     url = (g.get("url") or "#").strip()
     title_txt = _first_nonempty(g.get("title"), "Untitled grant")
     summary = _trim_summary(g.get("summary") or "")
 
     chips = []
+
+    if fit_score:
+        chips.append(
+            f"""
+            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#ecfeff;color:#0e7490;font-size:12px;font-weight:900">
+              Fit score: {fit_score}%
+            </span>
+            """
+        )
+
     if funding:
         chips.append(
             f"""
             <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800">
-              Up to {escape(funding)}
+              Funding: {escape(funding)}
             </span>
             """
         )
+
+    if radar.get("badge"):
+        chips.append(
+            f"""
+            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:800">
+              {escape(radar["badge"])}
+            </span>
+            """
+        )
+
+    if effort.get("label"):
+        chips.append(
+            f"""
+            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#f1f5f9;color:#334155;font-size:12px;font-weight:800;border:1px solid #e2e8f0">
+              Effort: {escape(effort["label"])}
+            </span>
+            """
+        )
+
     if deadline:
         chips.append(
             f"""
@@ -112,9 +145,9 @@ def render_card(g: dict):
     why_html = ""
     if why_list:
         why_html = (
-            "<div style='margin-top:12px;font-size:12px;line-height:1.6;color:#6b7280'>"
-            "<span style='font-weight:800;color:#374151'>Why matched:</span> "
-            + ", ".join(escape(x) for x in why_list[:5])
+            "<div style='margin-top:14px;font-size:13px;line-height:1.6;color:#475569'>"
+            "<span style='font-weight:900;color:#111827'>Why this matches you</span><br>"
+            + "".join(f"• {escape(x)}<br>" for x in why_list[:4])
             + "</div>"
         )
 
@@ -128,6 +161,7 @@ def render_card(g: dict):
 
     return f"""
 <div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;background:#ffffff;margin-bottom:16px;box-shadow:0 10px 30px rgba(15,23,42,0.05)">
+
   <div style="
     position:relative;
     padding:18px;
@@ -136,16 +170,9 @@ def render_card(g: dict):
       radial-gradient(160px 100px at 15% 80%, rgba(14,165,233,0.08), transparent 60%),
       linear-gradient(135deg,#ffffff 0%,#f8fbff 55%,#f3f7fb 100%);
   ">
-    <div style="
-      position:absolute; inset:0;
-      background-image:
-        linear-gradient(to right, rgba(17,24,39,0.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(17,24,39,0.04) 1px, transparent 1px);
-      background-size:36px 36px;
-      opacity:0.18;
-    "></div>
 
     <div style="position:relative;z-index:2">
+
       <div style="font-size:20px;font-weight:900;line-height:1.3;color:#111827">
         <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
           {escape(title_txt)}
@@ -153,21 +180,30 @@ def render_card(g: dict):
       </div>
 
       {"<div style='margin-top:12px;display:flex;flex-wrap:wrap;gap:8px'>" + chips_html + "</div>" if chips_html else ""}
+
     </div>
   </div>
 
   <div style="padding:18px">
+
     {summary_html}
 
-    <div style="margin-top:14px">
+    <div style="margin-top:16px">
       <a href="{escape(url)}" target="_blank" rel="noreferrer"
          style="display:inline-block;padding:10px 14px;border-radius:12px;background:#2563EB;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
-        Open application →
+        View details →
+      </a>
+
+      <a href="{escape(url)}" target="_blank" rel="noreferrer"
+         style="display:inline-block;margin-left:10px;padding:10px 14px;border-radius:12px;background:#111827;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
+        Apply →
       </a>
     </div>
 
     {why_html}
+
   </div>
+
 </div>
 """
 

@@ -8,6 +8,8 @@ from score import score_grant
 from digest import render_digest_html
 from store import get_all_grants
 from services.supabase_client import get_sent_counts, bump_sent, grant_fingerprint
+from utils.deadline_radar import deadline_badge
+from utils.application_effort import estimate_application_effort
 
 PACK_TO_PROFILE = {
     "DE": "profiles/germany_startup.yaml",
@@ -29,10 +31,12 @@ def _ensure_fingerprint(g: dict) -> str | None:
     fp = g.get("fingerprint")
     if fp:
         return fp
+
     title = (g.get("title") or "").strip()
     url = (g.get("url") or "").strip()
     if not title or not url:
         return None
+
     fp = grant_fingerprint(title, url)
     g["fingerprint"] = fp
     return fp
@@ -63,6 +67,14 @@ def _text_blob(g: dict) -> str:
 
 
 def is_pack_eligible(g: dict, pack: str) -> bool:
+    """
+    Hard pack filter.
+    Conservative rules:
+    - DE: Germany/Berlin only
+    - UK: UK only
+    - EU: EU + Germany, but not UK-only / Africa-only
+    - AFRICA: Africa-specific only, unless the text explicitly targets Africa
+    """
     pack = (pack or "").strip().upper()
     text = f" {_text_blob(g)} "
     source = (g.get("source") or "").strip().lower()
@@ -124,7 +136,7 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
     )
 
     is_eu = (
-        source in {"eu_funding_tenders_calls", "eic_accelerator", "tef_entrepreneurship"}
+        source in {"eu_funding_tenders_calls", "eic_accelerator"}
         or scope in {"EU", "EUROPE"}
         or has_any(
             "european union",
@@ -140,7 +152,6 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
         )
     )
 
-    # hard exclusions first
     if pack == "DE":
         return is_germany and not is_uk and not is_africa
 
@@ -148,28 +159,32 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
         return is_uk and not is_germany and not is_africa
 
     if pack == "EU":
-        # EU can include Germany, but not UK-only or Africa-only
         return (is_eu or is_germany) and not is_uk and not is_africa
 
     if pack == "AFRICA":
-        # Africa must be Africa-specific.
-        # Exclude DE/EU/UK unless Africa is explicitly the target region.
-        return is_africa and not is_germany and not (
-            is_uk and not has_any(
-                "africa",
-                "african",
-                "sub-saharan africa",
-                "african entrepreneurs",
-                "54 african countries",
-                "oda eligible countries in sub-saharan africa",
+        return (
+            is_africa
+            and not is_germany
+            and not (
+                is_uk
+                and not has_any(
+                    "africa",
+                    "african",
+                    "sub-saharan africa",
+                    "african entrepreneurs",
+                    "54 african countries",
+                    "oda eligible countries in sub-saharan africa",
+                )
             )
-        ) and not (
-            is_eu and not has_any(
-                "africa",
-                "african",
-                "sub-saharan africa",
-                "african entrepreneurs",
-                "54 african countries",
+            and not (
+                is_eu
+                and not has_any(
+                    "africa",
+                    "african",
+                    "sub-saharan africa",
+                    "african entrepreneurs",
+                    "54 african countries",
+                )
             )
         )
 
@@ -179,16 +194,21 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
 def pick_top(grants: List[dict], profile: dict, limit: int = 20) -> List[dict]:
     """
     Score and pick top grants for a profile.
-    Keeps only score > 0.
+    Keeps only score > 0 and enriches grants for rendering.
     """
     scored: List[dict] = []
+
     for g in grants:
         sc, why = score_grant(g, profile)
         if sc <= 0:
             continue
+
         gg = dict(g)
         gg["_score"] = sc
         gg["_why"] = why
+        gg["fit_score"] = max(1, min(99, int(sc * 10)))
+        gg["application_effort"] = estimate_application_effort(gg)
+        gg["deadline_radar"] = deadline_badge(gg.get("deadline_date"))
         scored.append(gg)
 
     scored.sort(key=lambda x: x.get("_score", 0), reverse=True)
@@ -208,7 +228,7 @@ def filter_repeat_sends(
         fps = [fp for g in grants if (fp := _ensure_fingerprint(g))]
         return grants, fps
 
-    fps = []
+    fps: List[str] = []
     for g in grants:
         fp = _ensure_fingerprint(g)
         if fp:
@@ -241,8 +261,11 @@ def generate_digest_for_pack(
 
     Applies:
       - hard pack eligibility filtering
-      - duplicate suppression
       - score-based ranking
+      - fit score enrichment
+      - application effort enrichment
+      - deadline radar enrichment
+      - duplicate suppression
     """
     pack = pack.upper().strip()
     if pack not in PACK_TO_PROFILE:
@@ -250,22 +273,18 @@ def generate_digest_for_pack(
 
     profile = load_profile(pack)
 
-    # Pull all grants from SQLite, then hard-filter for this pack
     grants = get_all_grants()
     eligible = [g for g in grants if is_pack_eligible(g, pack)]
 
-    # Pick top based on scoring within eligible grants only
-    top_n = int(profile.get("top_n", 20))
+    top_n = min(int(profile.get("top_n", 6)), 6)
     picked = pick_top(eligible, profile, limit=top_n)
 
-    # Apply repeat-suppression per subscriber
     sid = (subscriber_id or "").strip()
     filtered, fps_sent = filter_repeat_sends(sid, picked, max_repeat=max_repeat)
 
-    # Render HTML in single-pack mode
     html = render_digest_html(filtered, pack=pack)
 
-    subject = f"RubixScout {pack} Funding Digest"
+    subject = f"RubixScout — {pack} Funding Digest"
     return subject, html, len(filtered), fps_sent
 
 
