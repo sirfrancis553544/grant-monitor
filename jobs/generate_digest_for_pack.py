@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
+
 import yaml
 
-from score import score_grant
 from digest import render_digest_html
+from score import score_grant
+from services.supabase_client import bump_sent, get_sent_counts, grant_fingerprint
 from store import get_all_grants
-from services.supabase_client import get_sent_counts, bump_sent, grant_fingerprint
-from utils.deadline_radar import deadline_badge
 from utils.application_effort import estimate_application_effort
+from utils.deadline_radar import deadline_badge
+
 
 PACK_TO_PROFILE = {
     "DE": "profiles/germany_startup.yaml",
@@ -18,31 +21,63 @@ PACK_TO_PROFILE = {
     "AFRICA": "profiles/africa_startup.yaml",
 }
 
+PACK_LABELS = {
+    "DE": "Germany",
+    "EU": "European Union",
+    "UK": "United Kingdom",
+    "AFRICA": "Africa",
+}
 
-def load_profile(pack: str) -> dict:
+
+def load_profile(pack: str) -> Dict[str, Any]:
+    pack = (pack or "").strip().upper()
+    if pack not in PACK_TO_PROFILE:
+        raise ValueError(f"Unknown pack: {pack}")
+
     path = PACK_TO_PROFILE[pack]
-    return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
 
-def _ensure_fingerprint(g: dict) -> str | None:
+def _subject(pack: str) -> str:
+    pack = (pack or "").strip().upper()
+    label = PACK_LABELS.get(pack, pack or "Selected pack")
+    return f"RubixScout | Weekly Grant Digest ({label})"
+
+
+def _parse_dt(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def _ensure_fingerprint(g: Dict[str, Any]) -> str | None:
     """
     Ensure each grant has a stable fingerprint used for dedupe + send history.
     """
     fp = g.get("fingerprint")
     if fp:
-        return fp
+        return str(fp)
 
     title = (g.get("title") or "").strip()
     url = (g.get("url") or "").strip()
+    funder = (g.get("funder") or "").strip() or None
+    deadline_date = (g.get("deadline_date") or "").strip() or None
+
     if not title or not url:
         return None
 
-    fp = grant_fingerprint(title, url)
+    fp = grant_fingerprint(title, funder, deadline_date, url)
     g["fingerprint"] = fp
     return fp
 
 
-def _themes_to_text(themes) -> str:
+def _themes_to_text(themes: Any) -> str:
     if not themes:
         return ""
     if isinstance(themes, str):
@@ -52,7 +87,7 @@ def _themes_to_text(themes) -> str:
     return str(themes)
 
 
-def _text_blob(g: dict) -> str:
+def _text_blob(g: Dict[str, Any]) -> str:
     parts = [
         g.get("title"),
         g.get("summary"),
@@ -66,7 +101,7 @@ def _text_blob(g: dict) -> str:
     return " ".join(str(x or "") for x in parts).lower()
 
 
-def is_pack_eligible(g: dict, pack: str) -> bool:
+def is_pack_eligible(g: Dict[str, Any], pack: str) -> bool:
     """
     Hard pack filter.
     Conservative rules:
@@ -81,7 +116,7 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
     scope = (g.get("location_scope") or "").strip().upper()
 
     def has_any(*terms: str) -> bool:
-        return any(t.lower() in text for t in terms)
+        return any(term.lower() in text for term in terms)
 
     is_germany = (
         source.startswith("berlin_ibb")
@@ -191,12 +226,69 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
     return False
 
 
-def pick_top(grants: List[dict], profile: dict, limit: int = 20) -> List[dict]:
+def _freshness_bonus(g: Dict[str, Any]) -> float:
+    """
+    Small bonus for fresher grants so strong new items can rotate in.
+    """
+    last_seen = _parse_dt(g.get("last_seen"))
+    if not last_seen:
+        return 0.0
+
+    now = datetime.now(timezone.utc)
+    age_days = max(0, (now - last_seen).days)
+
+    if age_days <= 3:
+        return 1.2
+    if age_days <= 7:
+        return 0.9
+    if age_days <= 14:
+        return 0.5
+    if age_days <= 30:
+        return 0.2
+    return 0.0
+
+
+def _rotation_rank(g: Dict[str, Any], sent_count: int) -> float:
+    """
+    Final ranking score used for selection.
+    Balances base score with freshness and light anti-repeat pressure.
+    """
+    base = float(g.get("_score", 0))
+    freshness = _freshness_bonus(g)
+
+    # Penalize repeat exposure so near-equal grants can rotate.
+    repeat_penalty = 1.25 * max(0, sent_count)
+
+    # Slight nudge for nearer deadlines if deadline_radar already computed.
+    radar = g.get("deadline_radar") or {}
+    deadline_boost = 0.0
+    if isinstance(radar, dict):
+        days = radar.get("days")
+        try:
+            days_int = int(days)
+            if 0 <= days_int <= 14:
+                deadline_boost = 0.6
+            elif 15 <= days_int <= 30:
+                deadline_boost = 0.3
+        except Exception:
+            pass
+
+    return base + freshness + deadline_boost - repeat_penalty
+
+
+def pick_top(
+    grants: List[Dict[str, Any]],
+    profile: Dict[str, Any],
+    subscriber_id: str | None = None,
+    limit: int = 20,
+    max_repeat: int = 2,
+) -> List[Dict[str, Any]]:
     """
     Score and pick top grants for a profile.
-    Keeps only score > 0 and enriches grants for rendering.
+    Keeps only score > 0, enriches grants for rendering, and rotates results
+    so users do not see the exact same top items every week.
     """
-    scored: List[dict] = []
+    scored: List[Dict[str, Any]] = []
 
     for g in grants:
         sc, why = score_grant(g, profile)
@@ -209,20 +301,51 @@ def pick_top(grants: List[dict], profile: dict, limit: int = 20) -> List[dict]:
         gg["fit_score"] = max(1, min(99, int(sc * 10)))
         gg["application_effort"] = estimate_application_effort(gg)
         gg["deadline_radar"] = deadline_badge(gg.get("deadline_date"))
+        _ensure_fingerprint(gg)
+
         scored.append(gg)
 
-    scored.sort(key=lambda x: x.get("_score", 0), reverse=True)
-    return scored[:limit]
+    if not scored:
+        return []
+
+    counts: Dict[str, int] = {}
+    if subscriber_id:
+        fps = [g["fingerprint"] for g in scored if g.get("fingerprint")]
+        counts = get_sent_counts(subscriber_id=subscriber_id, fingerprints=fps)
+
+    eligible_ranked: List[Dict[str, Any]] = []
+    for g in scored:
+        fp = g.get("fingerprint")
+        sent_count = int(counts.get(fp, 0)) if fp else 0
+
+        if sent_count >= max_repeat:
+            continue
+
+        gg = dict(g)
+        gg["_sent_count"] = sent_count
+        gg["_rotation_rank"] = _rotation_rank(gg, sent_count)
+        eligible_ranked.append(gg)
+
+    eligible_ranked.sort(
+        key=lambda x: (
+            x.get("_rotation_rank", 0),
+            x.get("_score", 0),
+        ),
+        reverse=True,
+    )
+
+    return eligible_ranked[:limit]
 
 
 def filter_repeat_sends(
     subscriber_id: str,
-    grants: List[dict],
+    grants: List[Dict[str, Any]],
     max_repeat: int = 2,
-) -> Tuple[List[dict], List[str]]:
+) -> Tuple[List[Dict[str, Any]], List[str]]:
     """
-    Remove any grants already sent to this subscriber >= max_repeat times.
-    Returns (filtered_grants, fingerprints_of_filtered_grants).
+    Final defensive filter.
+    Returns:
+      (filtered_grants, fingerprints_of_filtered_grants)
     """
     if not subscriber_id:
         fps = [fp for g in grants if (fp := _ensure_fingerprint(g))]
@@ -236,7 +359,7 @@ def filter_repeat_sends(
 
     counts = get_sent_counts(subscriber_id=subscriber_id, fingerprints=fps)
 
-    allowed: List[dict] = []
+    allowed: List[Dict[str, Any]] = []
     allowed_fps: List[str] = []
 
     for g in grants:
@@ -265,9 +388,10 @@ def generate_digest_for_pack(
       - fit score enrichment
       - application effort enrichment
       - deadline radar enrichment
+      - smart grant rotation
       - duplicate suppression
     """
-    pack = pack.upper().strip()
+    pack = (pack or "").strip().upper()
     if pack not in PACK_TO_PROFILE:
         raise ValueError(f"Unknown pack: {pack}")
 
@@ -276,15 +400,22 @@ def generate_digest_for_pack(
     grants = get_all_grants()
     eligible = [g for g in grants if is_pack_eligible(g, pack)]
 
-    top_n = min(int(profile.get("top_n", 6)), 6)
-    picked = pick_top(eligible, profile, limit=top_n)
+    top_n = min(int(profile.get("top_n", 6) or 6), 12)
+
+    picked = pick_top(
+        eligible,
+        profile,
+        subscriber_id=subscriber_id,
+        limit=top_n,
+        max_repeat=max_repeat,
+    )
 
     sid = (subscriber_id or "").strip()
     filtered, fps_sent = filter_repeat_sends(sid, picked, max_repeat=max_repeat)
 
     html = render_digest_html(filtered, pack=pack)
+    subject = _subject(pack)
 
-    subject = f"RubixScout — {pack} Funding Digest"
     return subject, html, len(filtered), fps_sent
 
 
@@ -292,6 +423,8 @@ def mark_digest_sent(subscriber_id: str, fingerprints_sent: List[str]) -> None:
     """
     Call after successful email send.
     """
-    if not subscriber_id or not fingerprints_sent:
+    sid = (subscriber_id or "").strip()
+    if not sid or not fingerprints_sent:
         return
-    bump_sent(subscriber_id=subscriber_id, fingerprints=fingerprints_sent)
+
+    bump_sent(subscriber_id=sid, fingerprints=fingerprints_sent)

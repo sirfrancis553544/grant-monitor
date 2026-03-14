@@ -1,32 +1,31 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import yaml
 
-from services.email_resend import send_email as send_html_email
+from db import get_conn, init_db
+from digest import write_outputs
 from reminders import get_due_soon, render_reminder_html
+from score import score_grant
+from services.email_resend import send_email as send_html_email
+from services.supabase_client import grant_fingerprint, upsert_grants
 from sources.aecf import fetch_aecf_opportunities
-from sources.eu_funding_tenders import fetch_eu_funding_tenders_calls
-from sources.gsma import fetch_gsma_innovation_fund
-
 from sources.berlin_ibb import fetch_berlin_ibb_programs
 from sources.berlin_ibb_detail import enrich_berlin_ibb_program
-from sources.tef import fetch_tef_programme
 from sources.eic import fetch_eic_accelerator
+from sources.eu_funding_tenders import fetch_eu_funding_tenders_calls
+from sources.gsma import fetch_gsma_innovation_fund
 from sources.innovate_uk import fetch_innovate_uk_competitions
-
-from db import get_conn, init_db
 from sources.rss_source import fetch_rss
+from sources.tef import fetch_tef_programme
 from store import upsert_grant
-from score import score_grant
-from digest import write_outputs
-
-from services.supabase_client import upsert_grants, grant_fingerprint
 
 DB_PATH = "data/grants.db"
 
@@ -37,11 +36,11 @@ def canonical_url(u: str | None) -> str | None:
     return u.split("?")[0].rstrip("/")
 
 
-def load_yaml(path: str):
+def load_yaml(path: str) -> Any:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
-def load_profiles():
+def load_profiles() -> dict[str, dict[str, Any]]:
     return {
         "DE": load_yaml("profiles/germany_startup.yaml"),
         "EU": load_yaml("profiles/eu_startup.yaml"),
@@ -80,7 +79,32 @@ def _has_column(conn, table: str, col: str) -> bool:
         return False
 
 
-def _themes_to_text(themes) -> str:
+def _normalize_themes(value: Any) -> list[str]:
+    if not value:
+        return []
+
+    if isinstance(value, list):
+        return [str(x) for x in value if x]
+
+    if isinstance(value, (tuple, set)):
+        return [str(x) for x in value if x]
+
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return []
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [str(x) for x in parsed if x]
+        except Exception:
+            pass
+        return [raw]
+
+    return [str(value)]
+
+
+def _themes_to_text(themes: Any) -> str:
     if not themes:
         return ""
     if isinstance(themes, str):
@@ -104,7 +128,7 @@ def _text_blob(g: dict) -> str:
     return " ".join(str(x or "") for x in parts).lower()
 
 
-def _parse_date(raw):
+def _parse_date(raw: Any):
     if not raw:
         return None
 
@@ -376,7 +400,6 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
         )
     )
 
-    # hard exclusions first
     if pack == "DE":
         return is_germany and not is_uk and not is_africa
 
@@ -384,12 +407,9 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
         return is_uk and not is_germany and not is_africa
 
     if pack == "EU":
-        # EU can include Germany, but not UK-only or Africa-only
         return (is_eu or is_germany) and not is_uk and not is_africa
 
     if pack == "AFRICA":
-        # Africa must be Africa-specific.
-        # Exclude DE/EU/UK unless Africa is explicitly the target region.
         return is_africa and not is_germany and not (
             is_uk and not has_any(
                 "africa",
@@ -410,6 +430,39 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
         )
 
     return False
+
+
+def _base_grant(source_cfg: dict, item: dict) -> dict:
+    return {
+        "title": item.get("title"),
+        "url": item.get("url"),
+        "source": source_cfg.get("id") or source_cfg.get("name") or "unknown_source",
+        "funder": source_cfg.get("funder"),
+        "location_scope": source_cfg.get("location_scope"),
+        "themes": source_cfg.get("themes") or [],
+        "summary": item.get("summary") or "",
+        "eligibility_notes": item.get("eligibility_notes") or "",
+        "deadline_date": item.get("deadline_date"),
+        "funding_amount_min": item.get("funding_amount_min"),
+        "funding_amount_max": item.get("funding_amount_max"),
+    }
+
+
+def _ensure_fingerprint(g: dict) -> None:
+    if g.get("fingerprint"):
+        return
+
+    title = (g.get("title") or "").strip()
+    url = (g.get("url") or "").strip()
+    if not title or not url:
+        return
+
+    g["fingerprint"] = grant_fingerprint(
+        title,
+        g.get("funder"),
+        g.get("deadline_date"),
+        url,
+    )
 
 
 def main():
@@ -488,6 +541,7 @@ def main():
                     if extra.get("summary"):
                         g["summary"] = extra["summary"]
 
+                _ensure_fingerprint(g)
                 items.append(g)
 
         elif s.get("id") == "tef_entrepreneurship":
@@ -495,115 +549,49 @@ def main():
                 s["url"], programme_url=s.get("programme_url")
             ) or []
             for it in raw_items:
-                g = {
-                    "title": it.get("title"),
-                    "url": it.get("url"),
-                    "source": s.get("id"),
-                    "funder": s.get("funder"),
-                    "location_scope": s.get("location_scope"),
-                    "themes": s.get("themes") or [],
-                    "summary": it.get("summary") or "",
-                    "eligibility_notes": it.get("eligibility_notes") or "",
-                    "deadline_date": it.get("deadline_date"),
-                    "funding_amount_min": it.get("funding_amount_min"),
-                    "funding_amount_max": it.get("funding_amount_max"),
-                }
+                g = _base_grant(s, it)
                 if g["title"] and g["url"]:
+                    _ensure_fingerprint(g)
                     items.append(g)
 
         elif s.get("id") == "aecf_opportunities":
             raw_items = fetch_aecf_opportunities(s["url"]) or []
             for it in raw_items:
-                g = {
-                    "title": it.get("title"),
-                    "url": it.get("url"),
-                    "source": s.get("id"),
-                    "funder": s.get("funder"),
-                    "location_scope": s.get("location_scope"),
-                    "themes": s.get("themes") or [],
-                    "summary": it.get("summary") or "",
-                    "eligibility_notes": it.get("eligibility_notes") or "",
-                    "deadline_date": it.get("deadline_date"),
-                    "funding_amount_min": it.get("funding_amount_min"),
-                    "funding_amount_max": it.get("funding_amount_max"),
-                }
+                g = _base_grant(s, it)
                 if g["title"] and g["url"]:
+                    _ensure_fingerprint(g)
                     items.append(g)
 
         elif s.get("id") == "eu_funding_tenders_calls":
             raw_items = fetch_eu_funding_tenders_calls(s["url"]) or []
             for it in raw_items:
-                g = {
-                    "title": it.get("title"),
-                    "url": it.get("url"),
-                    "source": s.get("id"),
-                    "funder": s.get("funder"),
-                    "location_scope": s.get("location_scope"),
-                    "themes": s.get("themes") or [],
-                    "summary": it.get("summary") or "",
-                    "eligibility_notes": it.get("eligibility_notes") or "",
-                    "deadline_date": it.get("deadline_date"),
-                    "funding_amount_min": it.get("funding_amount_min"),
-                    "funding_amount_max": it.get("funding_amount_max"),
-                }
+                g = _base_grant(s, it)
                 if g["title"] and g["url"]:
+                    _ensure_fingerprint(g)
                     items.append(g)
 
         elif s.get("id") == "eic_accelerator":
             raw_items = fetch_eic_accelerator(s["url"]) or []
             for it in raw_items:
-                g = {
-                    "title": it.get("title"),
-                    "url": it.get("url"),
-                    "source": s.get("id"),
-                    "funder": s.get("funder"),
-                    "location_scope": s.get("location_scope"),
-                    "themes": s.get("themes") or [],
-                    "summary": it.get("summary") or "",
-                    "eligibility_notes": it.get("eligibility_notes") or "",
-                    "deadline_date": it.get("deadline_date"),
-                    "funding_amount_min": it.get("funding_amount_min"),
-                    "funding_amount_max": it.get("funding_amount_max"),
-                }
+                g = _base_grant(s, it)
                 if g["title"] and g["url"]:
+                    _ensure_fingerprint(g)
                     items.append(g)
 
         elif s.get("id") == "gsma_innovation_fund":
             raw_items = fetch_gsma_innovation_fund(s["url"]) or []
             for it in raw_items:
-                g = {
-                    "title": it.get("title"),
-                    "url": it.get("url"),
-                    "source": s.get("id"),
-                    "funder": s.get("funder"),
-                    "location_scope": s.get("location_scope"),
-                    "themes": s.get("themes") or [],
-                    "summary": it.get("summary") or "",
-                    "eligibility_notes": it.get("eligibility_notes") or "",
-                    "deadline_date": it.get("deadline_date"),
-                    "funding_amount_min": it.get("funding_amount_min"),
-                    "funding_amount_max": it.get("funding_amount_max"),
-                }
+                g = _base_grant(s, it)
                 if g["title"] and g["url"]:
+                    _ensure_fingerprint(g)
                     items.append(g)
 
         elif s.get("id") == "innovate_uk_competitions":
             raw_items = fetch_innovate_uk_competitions(s["url"]) or []
             for it in raw_items:
-                g = {
-                    "title": it.get("title"),
-                    "url": it.get("url"),
-                    "source": s.get("id"),
-                    "funder": s.get("funder"),
-                    "location_scope": s.get("location_scope"),
-                    "themes": s.get("themes") or [],
-                    "summary": it.get("summary") or "",
-                    "eligibility_notes": it.get("eligibility_notes") or "",
-                    "deadline_date": it.get("deadline_date"),
-                    "funding_amount_min": it.get("funding_amount_min"),
-                    "funding_amount_max": it.get("funding_amount_max"),
-                }
+                g = _base_grant(s, it)
                 if g["title"] and g["url"]:
+                    _ensure_fingerprint(g)
                     items.append(g)
 
         else:
@@ -620,6 +608,9 @@ def main():
                 location_scope=s.get("location_scope", "DE"),
                 themes=s.get("themes", []),
             )
+
+            for g in items:
+                _ensure_fingerprint(g)
 
         for g in items:
             total += 1
@@ -645,6 +636,7 @@ def main():
     for r in rows:
         title = r[0]
         url = r[9]
+        themes_value = _normalize_themes(r[8])
 
         gg = {
             "title": title,
@@ -655,7 +647,7 @@ def main():
             "funding_amount_min": r[5],
             "funding_amount_max": r[6],
             "location_scope": r[7],
-            "themes": r[8],
+            "themes": themes_value,
             "url": url,
             "source": r[10],
             "date_found": r[11],
@@ -663,7 +655,12 @@ def main():
         }
 
         if title and url:
-            gg["fingerprint"] = grant_fingerprint(title, url)
+            gg["fingerprint"] = grant_fingerprint(
+                title,
+                gg.get("funder"),
+                gg.get("deadline_date"),
+                url,
+            )
 
         if not validate_grant(gg):
             rejected_quality += 1
@@ -735,8 +732,7 @@ def main():
         supa_total = 0
         for pack, items in store_sections.items():
             for g in items:
-                if not g.get("fingerprint") and g.get("title") and g.get("url"):
-                    g["fingerprint"] = grant_fingerprint(g["title"], g["url"])
+                _ensure_fingerprint(g)
 
             supa_total += upsert_grants(items, pack=pack)
 

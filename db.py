@@ -34,7 +34,6 @@ CREATE INDEX IF NOT EXISTS idx_grants_last_seen ON grants(last_seen);
 CREATE INDEX IF NOT EXISTS idx_grants_deadline_date ON grants(deadline_date);
 """
 
-# Columns we require for older DB migrations
 REQUIRED_COLUMNS = {
     "fingerprint": "TEXT",
     "title": "TEXT",
@@ -56,12 +55,14 @@ REQUIRED_COLUMNS = {
     "raw_snippet": "TEXT",
 }
 
+
 def get_conn(db_path: str):
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA foreign_keys=ON;")
     return conn
+
 
 def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
     row = conn.execute(
@@ -70,15 +71,15 @@ def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
     ).fetchone()
     return row is not None
 
+
 def _get_columns(conn: sqlite3.Connection, table: str) -> set[str]:
     rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
-    # PRAGMA table_info => (cid, name, type, notnull, dflt_value, pk)
     return {r[1] for r in rows}
+
 
 def _migrate_grants_table(conn: sqlite3.Connection):
     """
     If DB already existed before schema updates, add missing columns.
-    This prevents 'column ... does not exist' errors.
     """
     if not _table_exists(conn, "grants"):
         return
@@ -90,15 +91,47 @@ def _migrate_grants_table(conn: sqlite3.Connection):
 
     for col in missing:
         col_type = REQUIRED_COLUMNS[col]
-        # keep defaults simple; store.py always writes values for these
         conn.execute(f"ALTER TABLE grants ADD COLUMN {col} {col_type}")
 
+
+def _backfill_nulls(conn: sqlite3.Connection):
+    """
+    Best-effort backfill for older rows after migrations.
+    """
+    if not _table_exists(conn, "grants"):
+        return
+
+    conn.execute("""
+        UPDATE grants
+        SET first_seen = COALESCE(first_seen, date_found)
+        WHERE first_seen IS NULL
+    """)
+    conn.execute("""
+        UPDATE grants
+        SET last_seen = COALESCE(last_seen, date_found)
+        WHERE last_seen IS NULL
+    """)
+    conn.execute("""
+        UPDATE grants
+        SET last_changed = COALESCE(last_changed, last_seen, date_found)
+        WHERE last_changed IS NULL
+    """)
+    conn.execute("""
+        UPDATE grants
+        SET confidence_score = COALESCE(confidence_score, 0.5)
+        WHERE confidence_score IS NULL
+    """)
+    conn.execute("""
+        UPDATE grants
+        SET themes = COALESCE(themes, '[]')
+        WHERE themes IS NULL
+    """)
+
+
 def init_db(conn: sqlite3.Connection):
-    # Create table if missing
     conn.executescript(SCHEMA_SQL)
-    # Migrate older tables if needed
     _migrate_grants_table(conn)
-    # Ensure indexes exist (safe even if already there)
+    _backfill_nulls(conn)
     conn.executescript("""
     CREATE INDEX IF NOT EXISTS idx_grants_last_seen ON grants(last_seen);
     CREATE INDEX IF NOT EXISTS idx_grants_deadline_date ON grants(deadline_date);

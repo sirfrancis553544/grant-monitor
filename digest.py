@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import date
 from html import escape
-import json
 import csv
+import json
 from pathlib import Path
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional, Union
 
 
 PACK_META = {
@@ -24,7 +24,15 @@ def _pack_label(pack: str) -> str:
     return pack or "Selected pack"
 
 
-def _fmt_money(max_amt, currency="€"):
+def _pack_plain_label(pack: str) -> str:
+    pack = (pack or "").strip().upper()
+    meta = PACK_META.get(pack)
+    if meta:
+        return meta["label"]
+    return pack or "Selected pack"
+
+
+def _fmt_money(max_amt: Any, currency: str = "€") -> Optional[str]:
     """Format max amount into labels like €250k / €1.2M."""
     if max_amt in (None, "", 0, "0"):
         return None
@@ -33,7 +41,7 @@ def _fmt_money(max_amt, currency="€"):
     except Exception:
         return None
 
-    if v > 1_000_000_000:
+    if v <= 0 or v > 1_000_000_000:
         return None
 
     if v >= 1_000_000:
@@ -43,15 +51,16 @@ def _fmt_money(max_amt, currency="€"):
     return f"{currency}{int(v)}"
 
 
-def _fmt_deadline(d):
+def _fmt_deadline(d: Any) -> str:
     """Normalize deadline values for chips."""
     if not d:
-        return "OPEN"
+        return "Open"
     ds = str(d).strip()
-    if ds.lower() == "rolling":
-        return "ROLLING"
-    if ds.lower() == "open":
-        return "OPEN"
+    low = ds.lower()
+    if low == "rolling":
+        return "Rolling"
+    if low == "open":
+        return "Open"
     return ds
 
 
@@ -64,7 +73,7 @@ def _trim_summary(text: str, max_len: int = 240) -> str:
     return text[:max_len].rsplit(" ", 1)[0] + "…"
 
 
-def _normalize_why(why) -> list[str]:
+def _normalize_why(why: Any) -> List[str]:
     if isinstance(why, str):
         return [why.strip()] if why.strip() else []
     if isinstance(why, (list, tuple)):
@@ -72,7 +81,7 @@ def _normalize_why(why) -> list[str]:
     return []
 
 
-def _first_nonempty(*values) -> str:
+def _first_nonempty(*values: Any) -> str:
     for v in values:
         s = str(v or "").strip()
         if s:
@@ -80,7 +89,22 @@ def _first_nonempty(*values) -> str:
     return ""
 
 
-def render_card(g: dict):
+def _safe_url(url: Any) -> str:
+    s = str(url or "").strip()
+    return s if s else "#"
+
+
+def _chip(label: str, bg: str, fg: str, border: Optional[str] = None) -> str:
+    border_css = f"border:1px solid {border};" if border else "border:none;"
+    return (
+        f'<span style="display:inline-block;padding:6px 10px;border-radius:999px;'
+        f'background:{bg};color:{fg};font-size:12px;font-weight:800;{border_css}">'
+        f"{escape(label)}"
+        f"</span>"
+    )
+
+
+def render_card(g: dict) -> str:
     deadline = _fmt_deadline(g.get("deadline_date"))
     funding = _fmt_money(g.get("funding_amount_max"))
     why_list = _normalize_why(g.get("_why"))
@@ -89,73 +113,49 @@ def render_card(g: dict):
     radar = g.get("deadline_radar") or {}
     effort = g.get("application_effort") or {}
 
-    url = (g.get("url") or "#").strip()
+    url = _safe_url(g.get("url"))
     title_txt = _first_nonempty(g.get("title"), "Untitled grant")
     summary = _trim_summary(g.get("summary") or "")
 
-    chips = []
+    chips: List[str] = []
 
-    if fit_score:
-        chips.append(
-            f"""
-            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#ecfeff;color:#0e7490;font-size:12px;font-weight:900">
-              Fit score: {fit_score}%
-            </span>
-            """
-        )
+    if fit_score not in (None, ""):
+        chips.append(_chip(f"Fit score: {fit_score}%", "#ecfeff", "#0e7490"))
 
     if funding:
-        chips.append(
-            f"""
-            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800">
-              Funding: {escape(funding)}
-            </span>
-            """
-        )
+        chips.append(_chip(f"Funding: {funding}", "#eff6ff", "#1d4ed8"))
 
     if radar.get("badge"):
-        chips.append(
-            f"""
-            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:800">
-              {escape(radar["badge"])}
-            </span>
-            """
-        )
+        chips.append(_chip(str(radar["badge"]), "#fef3c7", "#92400e"))
 
     if effort.get("label"):
-        chips.append(
-            f"""
-            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#f1f5f9;color:#334155;font-size:12px;font-weight:800;border:1px solid #e2e8f0">
-              Effort: {escape(effort["label"])}
-            </span>
-            """
-        )
+        chips.append(_chip(f"Effort: {effort['label']}", "#f8fafc", "#334155", "#e2e8f0"))
 
     if deadline:
-        chips.append(
-            f"""
-            <span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#f8fafc;color:#334155;font-size:12px;font-weight:800;border:1px solid #e5e7eb">
-              Deadline: {escape(deadline)}
-            </span>
-            """
-        )
+        chips.append(_chip(f"Deadline: {deadline}", "#f8fafc", "#334155", "#e5e7eb"))
 
     chips_html = "".join(chips)
-
-    why_html = ""
-    if why_list:
-        why_html = (
-            "<div style='margin-top:14px;font-size:13px;line-height:1.6;color:#475569'>"
-            "<span style='font-weight:900;color:#111827'>Why this matches you</span><br>"
-            + "".join(f"• {escape(x)}<br>" for x in why_list[:4])
-            + "</div>"
-        )
 
     summary_html = ""
     if summary:
         summary_html = f"""
-        <div style="margin-top:12px;font-size:14px;line-height:1.65;color:#374151">
+        <div style="margin-top:12px;font-size:14px;line-height:1.7;color:#374151">
           {escape(summary)}
+        </div>
+        """
+
+    why_html = ""
+    if why_list:
+        why_lines = "".join(
+            f'<div style="margin-top:6px">• {escape(item)}</div>'
+            for item in why_list[:4]
+        )
+        why_html = f"""
+        <div style="margin-top:16px;padding:14px 16px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
+          <div style="font-size:13px;font-weight:900;color:#111827">Why this matched</div>
+          <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#475569">
+            {why_lines}
+          </div>
         </div>
         """
 
@@ -172,20 +172,17 @@ def render_card(g: dict):
   ">
 
     <div style="position:relative;z-index:2">
-
-      <div style="font-size:20px;font-weight:900;line-height:1.3;color:#111827">
+      <div style="font-size:22px;font-weight:900;line-height:1.3;color:#111827">
         <a href="{escape(url)}" target="_blank" rel="noreferrer" style="color:#111827;text-decoration:none">
           {escape(title_txt)}
         </a>
       </div>
 
       {"<div style='margin-top:12px;display:flex;flex-wrap:wrap;gap:8px'>" + chips_html + "</div>" if chips_html else ""}
-
     </div>
   </div>
 
   <div style="padding:18px">
-
     {summary_html}
 
     <div style="margin-top:16px">
@@ -201,14 +198,12 @@ def render_card(g: dict):
     </div>
 
     {why_html}
-
   </div>
-
 </div>
 """
 
 
-def _render_section(parts, heading, items, subheading=None):
+def _render_section(parts: List[str], heading: str, items: List[dict], subheading: Optional[str] = None) -> None:
     parts.append(
         f"""
         <div style="margin:26px 0 10px;font-size:16px;color:#111827;font-weight:900">
@@ -258,7 +253,8 @@ def _normalize_sections(
 
 
 def _detect_primary_pack(sections: Dict[str, List[dict]]) -> str:
-    for key in ("DE", "EU", "UK", "AFRICA"):
+    preferred_order = ("DE", "EU", "UK", "AFRICA")
+    for key in preferred_order:
         if sections.get(key):
             return key
     for key in sections.keys():
@@ -267,9 +263,9 @@ def _detect_primary_pack(sections: Dict[str, List[dict]]) -> str:
 
 
 def render_digest_html(
-    sections,
+    sections: Union[Dict[str, List[dict]], List[dict], None],
     pack: Optional[str] = None,
-):
+) -> str:
     """
     Accepts either:
       - dict: {"DE":[...], "EU":[...], ...}
@@ -280,36 +276,43 @@ def render_digest_html(
     - footer is intentionally NOT rendered here anymore
       because send_weekly.py should inject the final unsubscribe-aware footer
     """
-    sections = _normalize_sections(sections, pack=pack)
-
+    normalized = _normalize_sections(sections, pack=pack)
     today = date.today().isoformat()
 
-    de = sections.get("DE", []) or []
-    eu = sections.get("EU", []) or []
-    uk = sections.get("UK", []) or []
-    af = sections.get("AFRICA", []) or []
-
-    total = len(de) + len(eu) + len(uk) + len(af)
-    primary_pack = (pack or _detect_primary_pack(sections)).strip().upper()
+    total = sum(len(items or []) for items in normalized.values())
+    primary_pack = (pack or _detect_primary_pack(normalized)).strip().upper()
     primary_pack_label = _pack_label(primary_pack)
+    primary_pack_plain = _pack_plain_label(primary_pack)
 
-    non_empty_sections = [(k, v) for k, v in sections.items() if v]
+    non_empty_sections = [(k, v) for k, v in normalized.items() if v]
     single_pack_mode = len(non_empty_sections) == 1
 
     if single_pack_mode:
-        intro_text = "Here are this week’s strongest funding matches for your selected pack."
+        intro_text = (
+            "Here are this week’s strongest funding matches for your selected pack. "
+            "Open the source link to verify eligibility and apply fast. "
+            "“Why this matched” explains why each opportunity showed up."
+        )
+        hero_title = f"Best funding matches for {primary_pack_plain}"
+        hero_meta = f"{total} opportunities · Prioritized by fit · Source links included"
         pack_display = primary_pack_label
     else:
-        intro_text = "Here are this week’s best matches across your selected digest sections."
+        intro_text = (
+            "Here are this week’s strongest funding matches across your selected packs. "
+            "Open each source link to verify eligibility and move quickly on deadlines."
+        )
+        hero_title = f"Your best matches for {today}"
+        hero_meta = f"{total} opportunities · Multi-pack digest · Source links included"
         pack_display = "Multi-pack digest"
 
-    parts = []
+    parts: List[str] = []
     parts.append(
         f"""
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RubixScout Weekly Grant Digest</title>
 </head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827">
   <div style="max-width:820px;margin:0 auto;padding:28px">
@@ -329,11 +332,11 @@ def render_digest_html(
               </div>
 
               <div style="margin-top:6px;font-size:24px;font-weight:900;line-height:1.15;color:#111827">
-                Your best matches for {escape(today)}
+                {escape(hero_title)}
               </div>
 
               <div style="margin-top:8px;font-size:13px;color:#475569">
-                {total} opportunities · Prioritized by fit · Source links included
+                {escape(hero_meta)}
               </div>
             </td>
 
@@ -356,8 +359,7 @@ def render_digest_html(
             Quick note 👋
           </div>
           <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#374151">
-            {escape(intro_text)} Open the source link to verify eligibility and apply fast.
-            “Why matched” explains why each opportunity showed up.
+            {escape(intro_text)}
           </div>
         </div>
 """
@@ -368,16 +370,12 @@ def render_digest_html(
         heading = f"{_pack_label(pack_key)} | best matches"
         _render_section(parts, heading, items)
     else:
-        if de:
-            _render_section(parts, f"{_pack_label('DE')} | best matches", de)
-        if eu:
-            _render_section(parts, f"{_pack_label('EU')} | best matches", eu)
-        if uk:
-            _render_section(parts, f"{_pack_label('UK')} | best matches", uk)
-        if af:
-            _render_section(parts, f"{_pack_label('AFRICA')} | best matches", af)
+        for section_key in ("DE", "EU", "UK", "AFRICA"):
+            items = normalized.get(section_key, []) or []
+            if items:
+                _render_section(parts, f"{_pack_label(section_key)} | best matches", items)
 
-        for section_key, items in sections.items():
+        for section_key, items in normalized.items():
             if section_key in {"DE", "EU", "UK", "AFRICA"}:
                 continue
             if items:
@@ -396,7 +394,11 @@ def render_digest_html(
     return "".join(parts)
 
 
-def write_outputs(sections, out_dir="data", pack: Optional[str] = None):
+def write_outputs(
+    sections: Union[Dict[str, List[dict]], List[dict], None],
+    out_dir: str = "data",
+    pack: Optional[str] = None,
+):
     """
     Accepts either:
       - dict sections
@@ -436,7 +438,11 @@ def write_outputs(sections, out_dir="data", pack: Optional[str] = None):
         "source",
         "_score",
         "_why",
+        "fit_score",
+        "deadline_radar",
+        "application_effort",
     ]
+
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()

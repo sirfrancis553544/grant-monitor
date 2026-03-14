@@ -1,47 +1,20 @@
-import re
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, List, Optional, Tuple
 
 
 def _parse_iso_date(s: Optional[str]):
     if not s:
         return None
 
-    s = str(s).strip()
-    s_l = s.lower()
-
-    if s_l in {"rolling", "open"}:
+    raw = str(s).strip()
+    low = raw.lower()
+    if low in {"rolling", "open"}:
         return "rolling"
 
-    # Remove weekday prefix like "Tuesday September 3, 2024"
-    s = re.sub(
-        r"^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+",
-        "",
-        s,
-        flags=re.IGNORECASE,
-    ).strip()
-
-    candidates = [
-        "%Y-%m-%d",
-        "%d/%m/%Y",
-        "%d-%m-%Y",
-        "%m/%d/%Y",
-        "%m-%d-%Y",
-        "%d %B %Y",
-        "%B %d, %Y",
-        "%b %d, %Y",
-        "%d %b %Y",
-    ]
-
-    for fmt in candidates:
-        try:
-            dt = datetime.strptime(s, fmt)
-            return dt.replace(tzinfo=timezone.utc)
-        except Exception:
-            pass
-
     try:
-        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt
@@ -49,7 +22,7 @@ def _parse_iso_date(s: Optional[str]):
         return None
 
 
-def _to_float(v) -> Optional[float]:
+def _to_float(v: Any) -> Optional[float]:
     if v is None:
         return None
     try:
@@ -58,15 +31,33 @@ def _to_float(v) -> Optional[float]:
         return None
 
 
-def _norm_text(v) -> str:
-    return (v or "").strip().lower()
+def _norm_text(v: Any) -> str:
+    if v is None:
+        return ""
+    if isinstance(v, (list, tuple, set)):
+        return " ".join(str(x).strip().lower() for x in v if x)
+    return str(v).strip().lower()
 
 
-def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
+def _unique_keep_order(items: List[str], limit: Optional[int] = None) -> List[str]:
+    seen = set()
+    out: List[str] = []
+    for item in items:
+        key = item.strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+        if limit and len(out) >= limit:
+            break
+    return out
+
+
+def _region_score(scope: str, country: str) -> Tuple[int, List[str]]:
     """
     Strong region fit scoring.
     """
-    why = []
+    why: List[str] = []
     scope_u = (scope or "").strip().upper()
     country_u = (country or "").strip().upper()
 
@@ -79,7 +70,7 @@ def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
         if "BERLIN" in scope_u or "GERMANY" in scope_u:
             return 4, [f"sub-region match: {scope_u}"]
         if scope_u in {"EU", "EUROPE"}:
-            return 1, ["broad regional relevance: EU"]
+            return 2, ["broader regional relevance: EU"]
         return -4, [f"wrong region: {scope_u}"]
 
     if country_u == "EU":
@@ -87,8 +78,8 @@ def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
             return 6, ["exact region match: EU"]
         if "EUROPE" in scope_u:
             return 5, [f"broad region match: {scope_u}"]
-        if scope_u == "DE":
-            return 1, ["partial regional relevance: DE within Europe"]
+        if scope_u in {"DE", "GERMANY", "BERLIN"}:
+            return 2, ["partial regional relevance within Europe"]
         if scope_u == "UK":
             return -3, ["wrong region: UK"]
         if scope_u == "AFRICA":
@@ -98,11 +89,11 @@ def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
     if country_u == "UK":
         if scope_u == "UK":
             return 6, ["exact region match: UK"]
-        if scope_u == "EU":
+        if scope_u in {"EU", "EUROPE"}:
             return -2, ["wrong region: EU"]
         if scope_u == "AFRICA":
             return -4, ["wrong region: AFRICA"]
-        if scope_u == "DE":
+        if scope_u in {"DE", "GERMANY", "BERLIN"}:
             return -3, ["wrong region: DE"]
         return -2, [f"weak region fit: {scope_u}"]
 
@@ -112,19 +103,19 @@ def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
         if "SUB-SAHARAN" in scope_u:
             return 5, [f"sub-region match: {scope_u}"]
         if scope_u in {"GLOBAL", "INTERNATIONAL"}:
-            return 1, [f"broad region relevance: {scope_u}"]
-        if scope_u in {"EU", "UK", "DE", "BERLIN"}:
+            return 2, [f"broad region relevance: {scope_u}"]
+        if scope_u in {"EU", "UK", "DE", "BERLIN", "GERMANY"}:
             return -4, [f"wrong region: {scope_u}"]
         return -2, [f"weak region fit: {scope_u}"]
 
-    if country_u in scope_u:
+    if country_u and country_u in scope_u:
         return 4, [f"scope includes {country_u}"]
 
     return 0, why
 
 
-def _deadline_score(deadline_raw, max_days: int) -> tuple[int, list[str]]:
-    why = []
+def _deadline_score(deadline_raw: Any, max_days: int) -> Tuple[int, List[str]]:
+    why: List[str] = []
     dd = _parse_iso_date(deadline_raw)
 
     if dd == "rolling":
@@ -147,11 +138,11 @@ def _deadline_score(deadline_raw, max_days: int) -> tuple[int, list[str]]:
     if delta_days <= max_days:
         return 1, [f"deadline within profile window: {delta_days}d"]
 
-    return -2, [f"deadline beyond {max_days}d"]
+    return -1, [f"deadline beyond {max_days}d"]
 
 
-def _funding_score(g: dict) -> tuple[int, list[str]]:
-    why = []
+def _funding_score(g: dict) -> Tuple[int, List[str]]:
+    why: List[str] = []
     max_amt = _to_float(g.get("funding_amount_max"))
     min_amt = _to_float(g.get("funding_amount_min"))
 
@@ -171,38 +162,69 @@ def _funding_score(g: dict) -> tuple[int, list[str]]:
     return 3, [f"high funding level: {int(amt):,}"]
 
 
-def _startup_fit_score(title: str, summary: str, eligibility: str, themes: str) -> tuple[int, list[str]]:
-    why = []
+def _startup_fit_score(title: str, summary: str, eligibility: str, themes: str) -> Tuple[int, List[str]]:
+    why: List[str] = []
     blob = " ".join([title, summary, eligibility, themes]).lower()
 
     positives = [
-        "startup", "sme", "small business", "kmu", "mittelstand",
-        "innovation", "accelerator", "incubator", "prototype",
-        "pilot", "feasibility", "scale-up", "deep tech", "technology",
-        "digital", "r&d", "research", "founder", "entrepreneur"
+        "startup",
+        "sme",
+        "small business",
+        "kmu",
+        "mittelstand",
+        "innovation",
+        "accelerator",
+        "incubator",
+        "prototype",
+        "pilot",
+        "feasibility",
+        "scale-up",
+        "deep tech",
+        "technology",
+        "digital",
+        "r&d",
+        "research",
+        "founder",
+        "entrepreneur",
     ]
     negatives = [
-        "procurement", "tender", "supply of", "school", "kindergarten",
-        "construction", "municipality", "public authority only",
-        "consultancy services", "staff position", "personnel funding only"
+        "procurement",
+        "tender",
+        "supply of",
+        "school",
+        "kindergarten",
+        "construction",
+        "municipality",
+        "public authority only",
+        "consultancy services",
+        "staff position",
+        "personnel funding only",
     ]
 
     score = 0
 
+    positive_hits: List[str] = []
+    negative_hits: List[str] = []
+
     for k in positives:
         if k in blob:
             score += 1
-            why.append(f"startup-fit match: {k}")
+            positive_hits.append(k)
 
     for k in negatives:
         if k in blob:
             score -= 4
-            why.append(f"startup-fit penalty: {k}")
+            negative_hits.append(k)
+
+    if positive_hits:
+        why.append(f"startup-fit signals: {', '.join(_unique_keep_order(positive_hits, limit=3))}")
+    if negative_hits:
+        why.append(f"startup-fit penalties: {', '.join(_unique_keep_order(negative_hits, limit=2))}")
 
     return score, why
 
 
-def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
+def score_grant(g: dict, profile: dict) -> Tuple[int, List[str]]:
     inc = [_norm_text(k) for k in profile.get("keywords_include", [])]
     exc = [_norm_text(k) for k in profile.get("keywords_exclude", [])]
 
@@ -210,11 +232,11 @@ def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
     summary = _norm_text(g.get("summary"))
     eligibility = _norm_text(g.get("eligibility_notes"))
     themes = _norm_text(g.get("themes"))
-    scope = (g.get("location_scope") or "").strip()
-    country = (profile.get("country") or "DE").strip().upper()
+    scope = str(g.get("location_scope") or "").strip()
+    country = str(profile.get("country") or "DE").strip().upper()
     max_days = int(profile.get("max_days_to_deadline", 90))
 
-    why: list[str] = []
+    why: List[str] = []
     score = 0
 
     for k in exc:
@@ -223,9 +245,9 @@ def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
         if k in title:
             score -= 5
             why.append(f"excluded title keyword: {k}")
-        elif k in summary or k in eligibility:
+        elif k in summary or k in eligibility or k in themes:
             score -= 3
-            why.append(f"excluded summary keyword: {k}")
+            why.append(f"excluded keyword: {k}")
 
     for k in inc:
         if not k:
@@ -256,5 +278,7 @@ def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
     fit_s, fit_why = _startup_fit_score(title, summary, eligibility, themes)
     score += fit_s
     why.extend(fit_why)
+
+    why = _unique_keep_order(why, limit=6)
 
     return score, why
