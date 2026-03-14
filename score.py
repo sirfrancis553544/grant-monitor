@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Optional
 
 
@@ -7,9 +7,38 @@ def _parse_iso_date(s: Optional[str]):
     if not s:
         return None
 
-    s = str(s).strip().lower()
-    if s == "rolling" or s == "open":
+    s = str(s).strip()
+    s_l = s.lower()
+
+    if s_l in {"rolling", "open"}:
         return "rolling"
+
+    # Remove weekday prefix like "Tuesday September 3, 2024"
+    s = re.sub(
+        r"^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    candidates = [
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%m-%d-%Y",
+        "%d %B %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%d %b %Y",
+    ]
+
+    for fmt in candidates:
+        try:
+            dt = datetime.strptime(s, fmt)
+            return dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
 
     try:
         dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
@@ -44,7 +73,6 @@ def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
     if not scope_u:
         return 0, why
 
-    # Exact / intended matches
     if country_u == "DE":
         if scope_u == "DE":
             return 6, ["exact region match: DE"]
@@ -89,7 +117,6 @@ def _region_score(scope: str, country: str) -> tuple[int, list[str]]:
             return -4, [f"wrong region: {scope_u}"]
         return -2, [f"weak region fit: {scope_u}"]
 
-    # fallback
     if country_u in scope_u:
         return 4, [f"scope includes {country_u}"]
 
@@ -132,7 +159,6 @@ def _funding_score(g: dict) -> tuple[int, list[str]]:
     if amt is None:
         return 0, why
 
-    # Guard against obviously broken values
     if amt > 1_000_000_000:
         return -2, ["suspicious funding amount"]
 
@@ -191,7 +217,6 @@ def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
     why: list[str] = []
     score = 0
 
-    # --- Exclusions first ---
     for k in exc:
         if not k:
             continue
@@ -202,7 +227,6 @@ def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
             score -= 3
             why.append(f"excluded summary keyword: {k}")
 
-    # --- Inclusion scoring ---
     for k in inc:
         if not k:
             continue
@@ -217,22 +241,18 @@ def score_grant(g: dict, profile: dict) -> tuple[int, list[str]]:
             score += 1
             why.append(f"summary match: {k}")
 
-    # --- Region fit ---
     region_s, region_why = _region_score(scope, country)
     score += region_s
     why.extend(region_why)
 
-    # --- Deadline fit ---
     deadline_s, deadline_why = _deadline_score(g.get("deadline_date"), max_days)
     score += deadline_s
     why.extend(deadline_why)
 
-    # --- Funding quality ---
     funding_s, funding_why = _funding_score(g)
     score += funding_s
     why.extend(funding_why)
 
-    # --- Startup relevance ---
     fit_s, fit_why = _startup_fit_score(title, summary, eligibility, themes)
     score += fit_s
     why.extend(fit_why)

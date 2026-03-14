@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -70,10 +72,6 @@ def apply_source_cap(items: list[dict], max_per_source: int = 3) -> list[dict]:
 
 
 def _has_column(conn, table: str, col: str) -> bool:
-    """
-    SQLite schema check. Prevents crashes like:
-    'column "last_seen" does not exist'
-    """
     try:
         rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
         cols = {r[1] for r in rows}
@@ -106,10 +104,204 @@ def _text_blob(g: dict) -> str:
     return " ".join(str(x or "") for x in parts).lower()
 
 
+def _parse_date(raw):
+    if not raw:
+        return None
+
+    s = str(raw).strip()
+    s_l = s.lower()
+
+    if s_l in {"rolling", "open"}:
+        return "rolling"
+
+    s = re.sub(
+        r"^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    fmts = [
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%m-%d-%Y",
+        "%d %B %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%d %b %Y",
+    ]
+
+    for fmt in fmts:
+        try:
+            dt = datetime.strptime(s, fmt)
+            return dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def _looks_like_actionable_opportunity(g: dict) -> bool:
+    """
+    Final quality gate before anything is scored/stored for digest output.
+
+    Goal:
+    - keep real funding/application opportunities
+    - reject recap/news/resource/blog/event pages
+    """
+    blob = _text_blob(g)
+
+    good_terms = [
+        "grant",
+        "fund",
+        "funding",
+        "apply",
+        "application",
+        "open call",
+        "call for applications",
+        "call for proposals",
+        "competition",
+        "challenge fund",
+        "innovation fund",
+        "request for proposals",
+        "rfp",
+        "deadline",
+        "eligibility",
+        "submit",
+        "co-financing",
+    ]
+
+    bad_terms = [
+        "bootcamp",
+        "highlights",
+        "highlight",
+        "event",
+        "events",
+        "news",
+        "blog",
+        "article",
+        "story",
+        "case study",
+        "report",
+        "resource",
+        "resources",
+        "video",
+        "webinar",
+        "workshop",
+        "podcast",
+        "press release",
+        "portfolio company",
+        "success story",
+        "meet the cohort",
+        "cohort spotlight",
+        "conference",
+        "summit",
+    ]
+
+    if any(term in blob for term in bad_terms):
+        return False
+
+    return any(term in blob for term in good_terms)
+
+
+def _is_stale_or_expired(g: dict) -> bool:
+    """
+    Reject obviously expired or stale content.
+    """
+    deadline = g.get("deadline_date")
+    parsed = _parse_date(deadline)
+
+    if parsed == "rolling":
+        return False
+
+    if parsed is not None:
+        return parsed < datetime.now(timezone.utc)
+
+    blob = _text_blob(g)
+
+    old_year_terms = ["2022", "2023", "2024"]
+    stale_context_terms = [
+        "bootcamp",
+        "highlight",
+        "highlights",
+        "event",
+        "events",
+        "resource",
+        "resources",
+        "story",
+        "case study",
+        "workshop",
+        "webinar",
+        "video",
+    ]
+
+    if any(y in blob for y in old_year_terms) and any(t in blob for t in stale_context_terms):
+        return True
+
+    return False
+
+
+def _has_minimum_signal(g: dict) -> bool:
+    """
+    Avoid sending garbage rows that have almost no usable metadata.
+    """
+    title = (g.get("title") or "").strip()
+    url = (g.get("url") or "").strip()
+    summary = (g.get("summary") or "").strip()
+    scope = (g.get("location_scope") or "").strip()
+
+    if not title or not url:
+        return False
+
+    if len(title) < 8:
+        return False
+
+    if url.startswith("#") or url.startswith("mailto:"):
+        return False
+
+    useful_fields = 0
+    if summary:
+        useful_fields += 1
+    if scope:
+        useful_fields += 1
+    if g.get("deadline_date"):
+        useful_fields += 1
+    if g.get("funding_amount_max") is not None or g.get("funding_amount_min") is not None:
+        useful_fields += 1
+    if g.get("eligibility_notes"):
+        useful_fields += 1
+
+    return useful_fields >= 1
+
+
+def validate_grant(g: dict) -> bool:
+    """
+    Final validation layer used across all packs before scoring.
+    """
+    if not _has_minimum_signal(g):
+        return False
+
+    if _is_stale_or_expired(g):
+        return False
+
+    if not _looks_like_actionable_opportunity(g):
+        return False
+
+    return True
+
+
 def is_pack_eligible(g: dict, pack: str) -> bool:
     """
     Hard region gate before scoring.
-    This is intentionally conservative:
+    Conservative rules:
     - DE gets Germany-specific items
     - UK gets UK-specific items
     - AFRICA gets Africa-specific items
@@ -430,6 +622,8 @@ def main():
     ).fetchall()
 
     normalized: list[dict] = []
+    rejected_quality = 0
+
     for r in rows:
         title = r[0]
         url = r[9]
@@ -452,6 +646,10 @@ def main():
 
         if title and url:
             gg["fingerprint"] = grant_fingerprint(title, url)
+
+        if not validate_grant(gg):
+            rejected_quality += 1
+            continue
 
         normalized.append(gg)
 
@@ -561,6 +759,7 @@ def main():
     # ------------------------------------
     print("Done.")
     print(f"Ingested items: {total} | inserted: {inserted} | changed: {changed}")
+    print(f"Rejected by quality gate: {rejected_quality}")
     print(
         "Digest sections:",
         f"DE={len(sections.get('DE', []))}",

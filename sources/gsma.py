@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from urllib.parse import urljoin
 
@@ -30,12 +31,58 @@ def _extract_deadline(text: str) -> Optional[str]:
         r"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b",
         r"\b\d{1,2}\s+[A-Za-z]+\s+\d{4}\b",
         r"\b[A-Za-z]+\s+\d{1,2},\s+\d{4}\b",
+        r"\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+[A-Za-z]+\s+\d{1,2},\s+\d{4}\b",
     ]
     for pat in patterns:
         m = re.search(pat, text, flags=re.IGNORECASE)
         if m:
             return m.group(0)
     return None
+
+
+def _parse_date(raw: Optional[str]):
+    if not raw:
+        return None
+
+    s = str(raw).strip()
+    s_l = s.lower()
+
+    if s_l in {"rolling", "open"}:
+        return "rolling"
+
+    s = re.sub(
+        r"^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    fmts = [
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%m-%d-%Y",
+        "%d %B %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%d %b %Y",
+    ]
+
+    for fmt in fmts:
+        try:
+            dt = datetime.strptime(s, fmt)
+            return dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
 
 
 def _extract_amount_max(text: str) -> Optional[float]:
@@ -70,21 +117,24 @@ def _extract_amount_max(text: str) -> Optional[float]:
 def _looks_like_fund_page(title: str, href: str) -> bool:
     t = title.lower()
     h = href.lower()
+    blob = f"{t} {h}"
 
     good = [
-        "fund",
-        "innovation",
         "grant",
-        "application",
+        "fund",
+        "funding",
         "apply",
-        "programme",
-        "program",
-        "venture",
-        "startup",
-        "challenge",
-        "opportun",
-        "cohort",
+        "application",
+        "open call",
+        "call for applications",
+        "call for proposals",
+        "competition",
+        "challenge fund",
+        "innovation fund",
+        "request for proposals",
+        "rfp",
     ]
+
     bad = [
         "privacy",
         "cookie",
@@ -100,13 +150,108 @@ def _looks_like_fund_page(title: str, href: str) -> bool:
         "report",
         "newsroom",
         "press",
+        "resource",
+        "resources",
+        "bootcamp",
+        "highlights",
+        "highlight",
+        "event",
+        "events",
+        "workshop",
+        "webinar",
+        "video",
+        "article",
+        "news",
+        "blog",
+        "case study",
+        "story",
+        "success story",
+        "portfolio",
+        "meet the cohort",
+        "cohort spotlight",
         "#",
         "mailto:",
     ]
 
-    if any(x in t or x in h for x in bad):
+    if any(x in blob for x in bad):
         return False
-    return any(x in t or x in h for x in good)
+
+    return any(x in blob for x in good)
+
+
+def _looks_like_live_opportunity(title: str, summary: str, href: str) -> bool:
+    blob = f"{title} {summary} {href}".lower()
+
+    good = [
+        "apply",
+        "application",
+        "call for applications",
+        "call for proposals",
+        "open call",
+        "deadline",
+        "grant",
+        "funding",
+        "competition",
+        "innovation fund",
+        "request for proposals",
+        "rfp",
+    ]
+
+    bad = [
+        "bootcamp",
+        "highlights",
+        "highlight",
+        "event",
+        "events",
+        "news",
+        "blog",
+        "resource",
+        "resources",
+        "video",
+        "workshop",
+        "webinar",
+        "article",
+        "report",
+        "story",
+        "case study",
+    ]
+
+    if any(x in blob for x in bad):
+        return False
+
+    return any(x in blob for x in good)
+
+
+def _is_obviously_stale(title: str, summary: str, deadline: Optional[str]) -> bool:
+    blob = f"{title} {summary}".lower()
+
+    if deadline:
+        parsed = _parse_date(deadline)
+        if parsed != "rolling" and parsed is not None:
+            now = datetime.now(timezone.utc)
+            if parsed < now:
+                return True
+
+    old_year_terms = ["2022", "2023", "2024"]
+    stale_content_terms = [
+        "bootcamp",
+        "highlight",
+        "highlights",
+        "event",
+        "events",
+        "workshop",
+        "video",
+        "resource",
+        "resources",
+        "blog",
+        "article",
+        "story",
+    ]
+
+    if any(y in blob for y in old_year_terms) and any(x in blob for x in stale_content_terms):
+        return True
+
+    return False
 
 
 def _summary_from_parent(parent, title: str) -> str:
@@ -116,6 +261,49 @@ def _summary_from_parent(parent, title: str) -> str:
     if text.startswith(title):
         text = text[len(title):].strip(" -:–|")
     return text[:700]
+
+
+def _extract_best_link_from_node(node, base_url: str):
+    anchors = node.select("a[href]")
+    if not anchors:
+        return None, None
+
+    preferred = []
+    fallback = []
+
+    for a in anchors:
+        href = (a.get("href") or "").strip()
+        text = _clean(a.get_text(" ", strip=True))
+        if not href:
+            continue
+
+        full_url = urljoin(base_url, href)
+        blob = f"{text} {full_url}".lower()
+
+        if any(
+            x in blob
+            for x in [
+                "apply",
+                "application",
+                "open call",
+                "call for applications",
+                "call for proposals",
+                "fund",
+                "funding",
+                "grant",
+                "competition",
+                "rfp",
+            ]
+        ):
+            preferred.append((text, full_url))
+        else:
+            fallback.append((text, full_url))
+
+    if preferred:
+        return preferred[0]
+    if fallback:
+        return fallback[0]
+    return None, None
 
 
 def fetch_gsma_innovation_fund(url: str) -> List[Dict[str, Any]]:
@@ -132,22 +320,25 @@ def fetch_gsma_innovation_fund(url: str) -> List[Dict[str, Any]]:
     seen_urls = set()
     seen_titles = set()
 
-    candidate_nodes = soup.select("article, .card, .views-row, li, .elementor-post, .post, .entry, section, div")
+    candidate_nodes = soup.select(
+        "article, .card, .views-row, li, .elementor-post, .post, .entry, section, div"
+    )
 
     extracted_any = False
 
     for node in candidate_nodes:
-        a = node.select_one("a[href]")
-        if not a:
+        title_a = node.select_one("a[href]")
+        if not title_a:
             continue
 
-        href = (a.get("href") or "").strip()
-        title = _clean(a.get_text(" ", strip=True))
-
-        if not href or not title or len(title) < 8:
+        title = _clean(title_a.get_text(" ", strip=True))
+        if not title or len(title) < 8:
             continue
 
-        full_url = urljoin(url, href)
+        _, full_url = _extract_best_link_from_node(node, url)
+        if not full_url:
+            continue
+
         if not _looks_like_fund_page(title, full_url):
             continue
 
@@ -158,6 +349,12 @@ def fetch_gsma_innovation_fund(url: str) -> List[Dict[str, Any]]:
         summary = _summary_from_parent(node, title)
         deadline = _extract_deadline(summary)
         amount_max = _extract_amount_max(summary)
+
+        if not _looks_like_live_opportunity(title, summary, full_url):
+            continue
+
+        if _is_obviously_stale(title, summary, deadline):
+            continue
 
         out.append(
             {
@@ -194,6 +391,12 @@ def fetch_gsma_innovation_fund(url: str) -> List[Dict[str, Any]]:
             summary = _summary_from_parent(parent, title)
             deadline = _extract_deadline(summary)
             amount_max = _extract_amount_max(summary)
+
+            if not _looks_like_live_opportunity(title, summary, full_url):
+                continue
+
+            if _is_obviously_stale(title, summary, deadline):
+                continue
 
             out.append(
                 {
