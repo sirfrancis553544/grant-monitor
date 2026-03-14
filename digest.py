@@ -33,7 +33,6 @@ def _fmt_money(max_amt, currency="€"):
     except Exception:
         return None
 
-    # Guard against obviously broken values
     if v > 1_000_000_000:
         return None
 
@@ -128,22 +127,22 @@ def render_card(g: dict):
         """
 
     return f"""
-<div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;background:#ffffff;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,0.04)">
+<div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;background:#ffffff;margin-bottom:16px;box-shadow:0 10px 30px rgba(15,23,42,0.05)">
   <div style="
     position:relative;
     padding:18px;
     background:
       radial-gradient(140px 90px at 85% 25%, rgba(37,99,235,0.10), transparent 60%),
-      radial-gradient(160px 100px at 15% 80%, rgba(16,185,129,0.08), transparent 60%),
-      linear-gradient(135deg,#ffffff 0%,#f8fafc 55%,#f3f4f6 100%);
+      radial-gradient(160px 100px at 15% 80%, rgba(14,165,233,0.08), transparent 60%),
+      linear-gradient(135deg,#ffffff 0%,#f8fbff 55%,#f3f7fb 100%);
   ">
     <div style="
       position:absolute; inset:0;
       background-image:
-        linear-gradient(to right, rgba(17,24,39,0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(17,24,39,0.05) 1px, transparent 1px);
+        linear-gradient(to right, rgba(17,24,39,0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(17,24,39,0.04) 1px, transparent 1px);
       background-size:36px 36px;
-      opacity:0.22;
+      opacity:0.18;
     "></div>
 
     <div style="position:relative;z-index:2">
@@ -176,7 +175,7 @@ def render_card(g: dict):
 def _render_section(parts, heading, items, subheading=None):
     parts.append(
         f"""
-        <div style="margin:22px 0 10px;font-size:15px;color:#111827;font-weight:900">
+        <div style="margin:26px 0 10px;font-size:16px;color:#111827;font-weight:900">
           {escape(heading)}
         </div>
         """
@@ -209,12 +208,6 @@ def _normalize_sections(
     sections: Union[Dict[str, List[dict]], List[dict], None],
     pack: Optional[str] = None,
 ) -> Dict[str, List[dict]]:
-    """
-    Backwards-compatible normalizer:
-    - If sections is a dict => return as-is
-    - If sections is a list => wrap into the provided pack if available
-    - If no pack is provided, fall back to DE for backward compatibility
-    """
     if sections is None:
         return {(pack or "DE").strip().upper(): []}
 
@@ -229,9 +222,6 @@ def _normalize_sections(
 
 
 def _detect_primary_pack(sections: Dict[str, List[dict]]) -> str:
-    """
-    Pick the first non-empty pack in priority order.
-    """
     for key in ("DE", "EU", "UK", "AFRICA"):
         if sections.get(key):
             return key
@@ -285,70 +275,82 @@ def render_digest_html(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
-<body style="margin:0;padding:0;background:#f6f7fb;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827">
-  <div style="max-width:820px;margin:0 auto;padding:22px">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827">
+  <div style="max-width:820px;margin:0 auto;padding:28px">
 
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
-      style="background:#111827;color:#ffffff;border-radius:18px;padding:18px 18px;border-collapse:separate">
-      <tr>
-        <td style="vertical-align:top;padding-right:12px">
-          <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#93c5fd">
-            RubixScout · Weekly Grant Digest
-          </div>
-          <div style="margin-top:6px;font-size:22px;font-weight:900;line-height:1.15">
-            Hi — here are your best matches for {escape(today)}
-          </div>
-          <div style="margin-top:8px;font-size:13px;color:#d1d5db">
-            {total} opportunities · Prioritized by fit · Source links included
-          </div>
-        </td>
+    <div style="border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;background:#ffffff;box-shadow:0 20px 60px rgba(0,0,0,0.08)">
 
-        <td style="vertical-align:top;text-align:right;width:210px">
-          <div style="display:inline-block;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);padding:10px 12px;border-radius:12px">
-            <div style="font-size:12px;color:#e5e7eb;font-weight:800">Pack</div>
-            <div style="margin-top:2px;font-size:13px;font-weight:900;color:#ffffff;white-space:nowrap">
-              {escape(pack_display)}
-            </div>
-          </div>
-        </td>
-      </tr>
-    </table>
+      <div style="background:#dbeafe;border-bottom:1px solid #bfdbfe;padding:26px 28px">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse">
+          <tr>
+            <td style="vertical-align:top;padding-right:12px">
+              <div style="height:42px;width:42px;border-radius:10px;background:#2563eb;color:#ffffff;font-weight:900;font-size:18px;display:grid;place-items:center;margin-bottom:14px">
+                R
+              </div>
 
-    <div style="margin-top:14px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">
-      <div style="font-size:14px;font-weight:900;color:#111827">
-        Quick note 👋
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#475569">
+                RubixScout · Weekly Grant Digest
+              </div>
+
+              <div style="margin-top:6px;font-size:24px;font-weight:900;line-height:1.15;color:#111827">
+                Your best matches for {escape(today)}
+              </div>
+
+              <div style="margin-top:8px;font-size:13px;color:#475569">
+                {total} opportunities · Prioritized by fit · Source links included
+              </div>
+            </td>
+
+            <td style="vertical-align:top;text-align:right;width:220px">
+              <div style="display:inline-block;background:rgba(255,255,255,0.72);border:1px solid rgba(37,99,235,0.12);padding:10px 12px;border-radius:12px">
+                <div style="font-size:12px;color:#64748b;font-weight:800">Pack</div>
+                <div style="margin-top:2px;font-size:13px;font-weight:900;color:#111827;white-space:nowrap">
+                  {escape(pack_display)}
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
       </div>
-      <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#374151">
-        {escape(intro_text)} Open the source link to verify eligibility and apply fast.
-        “Why matched” explains why each opportunity showed up.
-      </div>
-    </div>
+
+      <div style="padding:22px 22px 8px">
+
+        <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(15,23,42,0.03)">
+          <div style="font-size:14px;font-weight:900;color:#111827">
+            Quick note 👋
+          </div>
+          <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#374151">
+            {escape(intro_text)} Open the source link to verify eligibility and apply fast.
+            “Why matched” explains why each opportunity showed up.
+          </div>
+        </div>
 """
     )
 
     if single_pack_mode:
         pack_key, items = non_empty_sections[0] if non_empty_sections else (primary_pack, [])
-        heading = f"{_pack_label(pack_key)} best matches"
+        heading = f"{_pack_label(pack_key)} — best matches"
         _render_section(parts, heading, items)
     else:
         if de:
-            _render_section(parts, f"{_pack_label('DE')} best matches", de)
+            _render_section(parts, f"{_pack_label('DE')} — best matches", de)
         if eu:
-            _render_section(parts, f"{_pack_label('EU')} best matches", eu)
+            _render_section(parts, f"{_pack_label('EU')} — best matches", eu)
         if uk:
-            _render_section(parts, f"{_pack_label('UK')} best matches", uk)
+            _render_section(parts, f"{_pack_label('UK')} — best matches", uk)
         if af:
-            _render_section(parts, f"{_pack_label('AFRICA')} best matches", af)
+            _render_section(parts, f"{_pack_label('AFRICA')} — best matches", af)
 
-        # Render any extra/unknown pack keys too
         for section_key, items in sections.items():
             if section_key in {"DE", "EU", "UK", "AFRICA"}:
                 continue
             if items:
-                _render_section(parts, f"{_pack_label(section_key)} best matches", items)
+                _render_section(parts, f"{_pack_label(section_key)} — best matches", items)
 
     parts.append(
         """
+      </div>
+    </div>
   </div>
 </body>
 </html>
