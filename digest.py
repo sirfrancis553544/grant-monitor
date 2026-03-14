@@ -146,18 +146,22 @@ def render_card(g: dict) -> str:
 
     why_html = ""
     if why_list:
-        why_lines = "".join(
-            f'<div style="margin-top:6px">• {escape(item)}</div>'
+        why_tags = "".join(
+            f'<span style="display:inline-block;margin:6px 6px 0 0;padding:6px 10px;border-radius:999px;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155;font-size:12px;font-weight:700">{escape(item)}</span>'
             for item in why_list[:4]
         )
+
         why_html = f"""
-        <div style="margin-top:16px;padding:14px 16px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc">
-          <div style="font-size:13px;font-weight:900;color:#111827">Why this matched</div>
-          <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#475569">
-            {why_lines}
-          </div>
+        <div style="margin-top:16px">
+        <div style="font-size:13px;font-weight:900;color:#111827;margin-bottom:6px">
+            Why this matched
         </div>
-        """
+        <div>
+            {why_tags}
+        </div>
+    </div>
+    """
+
 
     return f"""
 <div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;background:#ffffff;margin-bottom:16px;box-shadow:0 10px 30px rgba(15,23,42,0.05)">
@@ -186,15 +190,10 @@ def render_card(g: dict) -> str:
     {summary_html}
 
     <div style="margin-top:16px">
-      <a href="{escape(url)}" target="_blank" rel="noreferrer"
-         style="display:inline-block;padding:10px 14px;border-radius:12px;background:#2563EB;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
-        View details →
-      </a>
-
-      <a href="{escape(url)}" target="_blank" rel="noreferrer"
-         style="display:inline-block;margin-left:10px;padding:10px 14px;border-radius:12px;background:#111827;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
-        Apply →
-      </a>
+     <a href="{escape(url)}" target="_blank" rel="noreferrer"
+        style="display:inline-block;padding:10px 14px;border-radius:12px;background:#2563EB;color:#ffffff;font-weight:800;font-size:14px;text-decoration:none">
+        Open source →
+     </a>
     </div>
 
     {why_html}
