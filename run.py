@@ -299,23 +299,17 @@ def validate_grant(g: dict) -> bool:
 
 
 def is_pack_eligible(g: dict, pack: str) -> bool:
-    """
-    Hard region gate before scoring.
-    Conservative rules:
-    - DE gets Germany-specific items
-    - UK gets UK-specific items
-    - AFRICA gets Africa-specific items
-    - EU can include EU-wide + Germany-specific items
-    """
     pack = (pack or "").strip().upper()
     text = f" {_text_blob(g)} "
     source = (g.get("source") or "").strip().lower()
+    scope = (g.get("location_scope") or "").strip().upper()
 
     def has_any(*terms: str) -> bool:
-        return any(f" {t.lower()} " in text or t.lower() in text for t in terms)
+        return any(t.lower() in text for t in terms)
 
     is_germany = (
         source.startswith("berlin_ibb")
+        or scope in {"DE", "BERLIN", "GERMANY"}
         or has_any(
             "germany",
             "german",
@@ -329,9 +323,9 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
 
     is_uk = (
         source.startswith("innovate_uk")
+        or scope == "UK"
         or has_any(
             "united kingdom",
-            " uk ",
             "britain",
             "british",
             "england",
@@ -344,11 +338,15 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
     )
 
     is_africa = (
-        source in {"aecf_opportunities", "gsma_innovation_fund"}
+        source in {"aecf_opportunities", "gsma_innovation_fund", "tef_entrepreneurship"}
+        or scope in {"AFRICA", "SUB-SAHARAN AFRICA"}
         or has_any(
             "africa",
             "african",
-            "sub-saharan",
+            "sub-saharan africa",
+            "entrepreneurs across africa",
+            "54 african countries",
+            "african entrepreneurs",
             "kenya",
             "nigeria",
             "south africa",
@@ -363,6 +361,7 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
 
     is_eu = (
         source in {"eu_funding_tenders_calls", "eic_accelerator", "tef_entrepreneurship"}
+        or scope in {"EU", "EUROPE"}
         or has_any(
             "european union",
             "horizon europe",
@@ -370,26 +369,45 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
             "funding & tenders",
             "funding and tenders",
             "eic accelerator",
-            "eic",
             "european innovation council",
-            "european",
             "eu-wide",
             "eu wide",
             "brussels",
         )
     )
 
+    # hard exclusions first
     if pack == "DE":
-        return is_germany
+        return is_germany and not is_uk and not is_africa
 
     if pack == "UK":
-        return is_uk
-
-    if pack == "AFRICA":
-        return is_africa
+        return is_uk and not is_germany and not is_africa
 
     if pack == "EU":
-        return is_eu or is_germany
+        # EU can include Germany, but not UK-only or Africa-only
+        return (is_eu or is_germany) and not is_uk and not is_africa
+
+    if pack == "AFRICA":
+        # Africa must be Africa-specific.
+        # Exclude DE/EU/UK unless Africa is explicitly the target region.
+        return is_africa and not is_germany and not (
+            is_uk and not has_any(
+                "africa",
+                "african",
+                "sub-saharan africa",
+                "african entrepreneurs",
+                "54 african countries",
+                "oda eligible countries in sub-saharan africa",
+            )
+        ) and not (
+            is_eu and not has_any(
+                "africa",
+                "african",
+                "sub-saharan africa",
+                "african entrepreneurs",
+                "54 african countries",
+            )
+        )
 
     return False
 
