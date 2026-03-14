@@ -5,15 +5,23 @@ from html import escape
 import json
 import csv
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 
-PACK_LABELS = {
-    "DE": "🇩🇪 Germany",
-    "EU": "🇪🇺 European Union",
-    "UK": "🇬🇧 United Kingdom",
-    "AFRICA": "🌍 Africa",
+PACK_META = {
+    "DE": {"label": "Germany", "flag": "🇩🇪"},
+    "EU": {"label": "European Union", "flag": "🇪🇺"},
+    "UK": {"label": "United Kingdom", "flag": "🇬🇧"},
+    "AFRICA": {"label": "Africa", "flag": "🌍"},
 }
+
+
+def _pack_label(pack: str) -> str:
+    pack = (pack or "").strip().upper()
+    meta = PACK_META.get(pack)
+    if meta:
+        return f"{meta['flag']} {meta['label']}"
+    return pack or "Selected pack"
 
 
 def _fmt_money(max_amt, currency="€"):
@@ -198,22 +206,25 @@ def _render_section(parts, heading, items, subheading=None):
 
 
 def _normalize_sections(
-    sections: Union[Dict[str, List[dict]], List[dict], None]
+    sections: Union[Dict[str, List[dict]], List[dict], None],
+    pack: Optional[str] = None,
 ) -> Dict[str, List[dict]]:
     """
     Backwards-compatible normalizer:
     - If sections is a dict => return as-is
-    - If sections is a list => wrap into DE by default for single-pack renderer compatibility
+    - If sections is a list => wrap into the provided pack if available
+    - If no pack is provided, fall back to DE for backward compatibility
     """
     if sections is None:
-        return {"DE": []}
+        return {(pack or "DE").strip().upper(): []}
 
     if isinstance(sections, list):
-        return {"DE": sections}
+        pack_key = (pack or "DE").strip().upper()
+        return {pack_key: sections}
 
     out: Dict[str, List[dict]] = {}
     for k, v in (sections or {}).items():
-        out[str(k)] = v or []
+        out[str(k).strip().upper()] = v or []
     return out
 
 
@@ -224,20 +235,26 @@ def _detect_primary_pack(sections: Dict[str, List[dict]]) -> str:
     for key in ("DE", "EU", "UK", "AFRICA"):
         if sections.get(key):
             return key
+    for key in sections.keys():
+        return key
     return "DE"
 
 
 def render_digest_html(
     sections,
-    unsubscribe_url: str = "https://rubixscout.com/unsubscribe",
+    pack: Optional[str] = None,
 ):
     """
     Accepts either:
       - dict: {"DE":[...], "EU":[...], ...}
       - list: [ ... ]   (single-pack mode)
-    Renders a cleaner weekly digest email.
+
+    Important:
+    - pass `pack="AFRICA"` / `pack="EU"` / etc when using list mode
+    - footer is intentionally NOT rendered here anymore
+      because send_weekly.py should inject the final unsubscribe-aware footer
     """
-    sections = _normalize_sections(sections)
+    sections = _normalize_sections(sections, pack=pack)
 
     today = date.today().isoformat()
 
@@ -247,8 +264,8 @@ def render_digest_html(
     af = sections.get("AFRICA", []) or []
 
     total = len(de) + len(eu) + len(uk) + len(af)
-    primary_pack = _detect_primary_pack(sections)
-    primary_pack_label = PACK_LABELS.get(primary_pack, primary_pack)
+    primary_pack = (pack or _detect_primary_pack(sections)).strip().upper()
+    primary_pack_label = _pack_label(primary_pack)
 
     non_empty_sections = [(k, v) for k, v in sections.items() if v]
     single_pack_mode = len(non_empty_sections) == 1
@@ -310,29 +327,28 @@ def render_digest_html(
     )
 
     if single_pack_mode:
-        pack_key, items = non_empty_sections[0] if non_empty_sections else ("DE", [])
-        heading = PACK_LABELS.get(pack_key, pack_key) + " — best matches"
+        pack_key, items = non_empty_sections[0] if non_empty_sections else (primary_pack, [])
+        heading = f"{_pack_label(pack_key)} — best matches"
         _render_section(parts, heading, items)
     else:
         if de:
-            _render_section(parts, "🇩🇪 Germany — best matches", de)
+            _render_section(parts, f"{_pack_label('DE')} — best matches", de)
         if eu:
-            _render_section(parts, "🇪🇺 European Union — best matches", eu)
+            _render_section(parts, f"{_pack_label('EU')} — best matches", eu)
         if uk:
-            _render_section(parts, "🇬🇧 United Kingdom — best matches", uk)
+            _render_section(parts, f"{_pack_label('UK')} — best matches", uk)
         if af:
-            _render_section(parts, "🌍 Africa — best matches", af)
+            _render_section(parts, f"{_pack_label('AFRICA')} — best matches", af)
+
+        # Render any extra/unknown pack keys too
+        for section_key, items in sections.items():
+            if section_key in {"DE", "EU", "UK", "AFRICA"}:
+                continue
+            if items:
+                _render_section(parts, f"{_pack_label(section_key)} — best matches", items)
 
     parts.append(
-        f"""
-    <div style="margin-top:18px;padding:16px 0;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;text-align:center">
-      <div style="font-weight:800;color:#111827;margin-bottom:6px">RubixScout</div>
-      <div>New funding opportunities every week.</div>
-      <div style="margin-top:10px">
-        <a href="{escape(unsubscribe_url)}" style="color:#2563eb;text-decoration:none;font-weight:800">Manage subscription</a>
-      </div>
-    </div>
-
+        """
   </div>
 </body>
 </html>
@@ -342,15 +358,17 @@ def render_digest_html(
     return "".join(parts)
 
 
-def write_outputs(sections, out_dir="data"):
+def write_outputs(sections, out_dir="data", pack: Optional[str] = None):
     """
     Accepts either:
       - dict sections
       - list (single pack)
+
     Writes:
       - digest.json (normalized sections dict)
       - digest.csv  (flattened rows with a 'section' column)
       - digest.html (rendered from sections)
+
     Returns: (json_path, csv_path, html_path)
     """
     out = Path(out_dir)
@@ -360,7 +378,7 @@ def write_outputs(sections, out_dir="data"):
     csv_path = out / "digest.csv"
     html_path = out / "digest.html"
 
-    normalized = _normalize_sections(sections)
+    normalized = _normalize_sections(sections, pack=pack)
 
     json_path.write_text(
         json.dumps(normalized, ensure_ascii=False, indent=2),
@@ -392,10 +410,7 @@ def write_outputs(sections, out_dir="data"):
                 row["section"] = section_key
                 w.writerow(row)
 
-    html = render_digest_html(
-        normalized,
-        unsubscribe_url="https://rubixscout.com/unsubscribe",
-    )
+    html = render_digest_html(normalized, pack=pack)
     html_path.write_text(html, encoding="utf-8")
 
     return str(json_path), str(csv_path), str(html_path)

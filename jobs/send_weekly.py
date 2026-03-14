@@ -1,6 +1,7 @@
 # jobs/send_weekly.py
 
 import os
+import re
 import traceback
 from pathlib import Path
 from typing import List, Dict, Any
@@ -78,14 +79,24 @@ def _pick_unsent(
     return out
 
 
-def _subject(pack: str) -> str:
-    pack_names = {
-        "DE": "Germany",
-        "EU": "European Union",
-        "UK": "United Kingdom",
-        "AFRICA": "Africa",
+def _pack_meta(pack: str) -> Dict[str, str]:
+    pack = (pack or "").strip().upper()
+
+    mapping = {
+        "DE": {"label": "Germany", "flag": "🇩🇪"},
+        "EU": {"label": "European Union", "flag": "🇪🇺"},
+        "UK": {"label": "United Kingdom", "flag": "🇬🇧"},
+        "AFRICA": {"label": "Africa", "flag": "🌍"},
     }
-    label = pack_names.get(pack, pack)
+
+    if pack in mapping:
+        return mapping[pack]
+
+    return {"label": pack or "Selected pack", "flag": "📦"}
+
+
+def _subject(pack: str) -> str:
+    label = _pack_meta(pack)["label"]
     return f"RubixScout — Weekly Grant Digest ({label})"
 
 
@@ -102,6 +113,78 @@ def _footer_html(app_url: str, unsub_url: str) -> str:
       <div style="margin-top:10px">Tip: Reply with keywords like “AI”, “Climate”, or “Berlin” to improve future matches.</div>
     </div>
     """
+
+
+def _strip_existing_footer(html: str) -> str:
+    """
+    Remove older/static footer blocks so only the final tokenized footer remains.
+    This is intentionally defensive because older digest templates may include
+    legacy footer HTML already baked into render_digest_html().
+    """
+    if not html:
+        return html
+
+    patterns = [
+        # Remove any block containing "Manage subscription"
+        r'<div[^>]*>.*?Manage subscription.*?</div>\s*</div>?',
+
+        # Remove any block containing both RubixScout and "New funding opportunities every week."
+        r'<div[^>]*>.*?RubixScout.*?New funding opportunities every week\..*?</div>\s*</div>?',
+
+        # Remove any block containing "You’re receiving this weekly digest..."
+        r'<div[^>]*>.*?You[’\']re receiving this weekly digest because you subscribed to grant alerts\..*?</div>\s*</div>?',
+
+        # Remove footer-like sections that contain View site / Unsubscribe together
+        r'<div[^>]*>.*?View site.*?Unsubscribe.*?</div>\s*</div>?',
+    ]
+
+    cleaned = html
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE | re.DOTALL)
+
+    return cleaned
+
+
+def _replace_pack_labels(html: str, pack: str) -> str:
+    """
+    Temporary sender-layer fix for hardcoded Germany strings inside the digest body.
+    Best long-term fix: make digest.py fully dynamic.
+    """
+    if not html:
+        return html
+
+    meta = _pack_meta(pack)
+    label = meta["label"]
+    flag = meta["flag"]
+
+    replacements = [
+        ("Pack Germany", f"Pack {label}"),
+        ("🇩🇪 Germany", f"{flag} {label}"),
+        ("Germany — best matches", f"{flag} {label} — best matches"),
+        (">Germany — best matches<", f">{flag} {label} — best matches<"),
+        (">Pack Germany<", f">Pack {label}<"),
+        ("(Germany)", f"({label})"),
+    ]
+
+    for old, new in replacements:
+        html = html.replace(old, new)
+
+    # Extra fallback replacement for standalone visible "Germany" labels
+    # Be conservative: only replace if it's clearly visible label text, not URLs.
+    html = re.sub(
+        r'(?<=>)\s*Germany\s*(?=<)',
+        label,
+        html,
+        flags=re.IGNORECASE,
+    )
+
+    return html
+
+
+def _inject_footer(html: str, footer: str) -> str:
+    if "</body>" in html:
+        return html.replace("</body>", f"{footer}</body>")
+    return html + footer
 
 
 def main():
@@ -159,10 +242,14 @@ def main():
                 continue
 
             # 5) Render email HTML
-            html = render_digest_html(chosen)
+            html = render_digest_html(chosen, pack=pack)
             subject = _subject(pack)
 
-            # 6) Inject footer
+            # 6) Fix body pack labels and remove legacy footer(s)
+            html = _replace_pack_labels(html, pack)
+            html = _strip_existing_footer(html)
+
+            # 7) Inject final footer with correct unsubscribe token
             unsub_token = sub.get("unsubscribe_token")
             unsub_url = (
                 f"{app_url}/unsubscribe?token={unsub_token}"
@@ -172,12 +259,9 @@ def main():
 
             if unsub_url:
                 footer = _footer_html(app_url=app_url, unsub_url=unsub_url)
-                if "</body>" in html:
-                    html = html.replace("</body>", f"{footer}</body>")
-                else:
-                    html += footer
+                html = _inject_footer(html, footer)
 
-            # 7) Send email
+            # 8) Send email
             send_email(
                 subject=subject,
                 html=html,
@@ -185,11 +269,11 @@ def main():
                 reply_to=reply_to,
             )
 
-            # 8) Track what was actually sent
+            # 9) Track what was actually sent
             sent_fps = [g["fingerprint"] for g in chosen if g.get("fingerprint")]
             bump_sent(sid, sent_fps)
 
-            # 9) Optional weekly history
+            # 10) Optional weekly history
             if add_send_history and sent_fps:
                 wk = week_key_today()
                 try:
@@ -202,7 +286,7 @@ def main():
                 except Exception as e:
                     print("⚠️ add_send_history failed:", str(e))
 
-            # 10) Log success
+            # 11) Log success
             log_send(
                 subscriber_id=sid,
                 pack=pack,
