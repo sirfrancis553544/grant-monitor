@@ -247,7 +247,7 @@ def generate_digest_for_pack(
     # Render HTML in single-pack mode
     html = render_digest_html(filtered, pack=pack)
 
-    subject = f"RubixScout — {pack} Funding Digest"
+    subject = f"RubixScout {pack} Funding Digest"
     return subject, html, len(filtered), fps_sent
 
 

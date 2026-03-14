@@ -97,7 +97,7 @@ def _pack_meta(pack: str) -> Dict[str, str]:
 
 def _subject(pack: str) -> str:
     label = _pack_meta(pack)["label"]
-    return f"RubixScout — Weekly Grant Digest ({label})"
+    return f"RubixScout | Weekly Grant Digest ({label})"
 
 
 def _footer_html(app_url: str, unsub_url: str) -> str:

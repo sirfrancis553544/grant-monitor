@@ -329,23 +329,23 @@ def render_digest_html(
 
     if single_pack_mode:
         pack_key, items = non_empty_sections[0] if non_empty_sections else (primary_pack, [])
-        heading = f"{_pack_label(pack_key)} — best matches"
+        heading = f"{_pack_label(pack_key)} | best matches"
         _render_section(parts, heading, items)
     else:
         if de:
-            _render_section(parts, f"{_pack_label('DE')} — best matches", de)
+            _render_section(parts, f"{_pack_label('DE')} | best matches", de)
         if eu:
-            _render_section(parts, f"{_pack_label('EU')} — best matches", eu)
+            _render_section(parts, f"{_pack_label('EU')} | best matches", eu)
         if uk:
-            _render_section(parts, f"{_pack_label('UK')} — best matches", uk)
+            _render_section(parts, f"{_pack_label('UK')} | best matches", uk)
         if af:
-            _render_section(parts, f"{_pack_label('AFRICA')} — best matches", af)
+            _render_section(parts, f"{_pack_label('AFRICA')} | best matches", af)
 
         for section_key, items in sections.items():
             if section_key in {"DE", "EU", "UK", "AFRICA"}:
                 continue
             if items:
-                _render_section(parts, f"{_pack_label(section_key)} — best matches", items)
+                _render_section(parts, f"{_pack_label(section_key)} | best matches", items)
 
     parts.append(
         """
