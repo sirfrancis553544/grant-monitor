@@ -284,7 +284,7 @@ def render_digest_html(
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse">
           <tr>
             <td style="vertical-align:top;padding-right:12px">
-              <div style="height:42px;width:42px;border-radius:10px;background:#2563eb;color:#ffffff;font-weight:900;font-size:18px;display:grid;place-items:center;margin-bottom:14px">
+              <div style="height:42px;width:42px;border-radius:10px;background:#2563eb;color:#ffffff;font-weight:900;font-size:18px;line-height:42px;text-align:center;margin-bottom:14px;display:block">
                 R
               </div>
 

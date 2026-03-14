@@ -1,19 +1,12 @@
-# jobs/generate_digest_for_pack.py
-
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 import yaml
 
 from score import score_grant
 from digest import render_digest_html
-
-# ✅ You must have a function that returns a list[dict] of grants from SQLite.
-# If your function name differs, update the import + call below.
 from store import get_all_grants
-
-# ✅ Supabase send-history helpers
 from services.supabase_client import get_sent_counts, bump_sent, grant_fingerprint
 
 PACK_TO_PROFILE = {
@@ -45,6 +38,126 @@ def _ensure_fingerprint(g: dict) -> str | None:
     return fp
 
 
+def _themes_to_text(themes) -> str:
+    if not themes:
+        return ""
+    if isinstance(themes, str):
+        return themes
+    if isinstance(themes, (list, tuple, set)):
+        return " ".join(str(x) for x in themes if x)
+    return str(themes)
+
+
+def _text_blob(g: dict) -> str:
+    parts = [
+        g.get("title"),
+        g.get("summary"),
+        g.get("eligibility_notes"),
+        g.get("location_scope"),
+        g.get("funder"),
+        _themes_to_text(g.get("themes")),
+        g.get("source"),
+        g.get("url"),
+    ]
+    return " ".join(str(x or "") for x in parts).lower()
+
+
+def is_pack_eligible(g: dict, pack: str) -> bool:
+    """
+    Hard region gate before scoring.
+    Conservative rules:
+    - DE gets Germany-specific items
+    - UK gets UK-specific items
+    - AFRICA gets Africa-specific items
+    - EU can include EU-wide + Germany-specific items
+    """
+    pack = (pack or "").strip().upper()
+    text = f" {_text_blob(g)} "
+    source = (g.get("source") or "").strip().lower()
+
+    def has_any(*terms: str) -> bool:
+        return any(f" {t.lower()} " in text or t.lower() in text for t in terms)
+
+    is_germany = (
+        source.startswith("berlin_ibb")
+        or has_any(
+            "germany",
+            "german",
+            "berlin",
+            "deutschland",
+            "deutsche",
+            "investitionsbank berlin",
+            "ibb",
+        )
+    )
+
+    is_uk = (
+        source.startswith("innovate_uk")
+        or has_any(
+            "united kingdom",
+            " uk ",
+            "britain",
+            "british",
+            "england",
+            "scotland",
+            "wales",
+            "northern ireland",
+            "innovate uk",
+            "ukri",
+        )
+    )
+
+    is_africa = (
+        source in {"aecf_opportunities", "gsma_innovation_fund"}
+        or has_any(
+            "africa",
+            "african",
+            "sub-saharan",
+            "kenya",
+            "nigeria",
+            "south africa",
+            "ghana",
+            "uganda",
+            "tanzania",
+            "rwanda",
+            "zambia",
+            "ethiopia",
+        )
+    )
+
+    is_eu = (
+        source in {"eu_funding_tenders_calls", "eic_accelerator", "tef_entrepreneurship"}
+        or has_any(
+            "european union",
+            "horizon europe",
+            "european commission",
+            "funding & tenders",
+            "funding and tenders",
+            "eic accelerator",
+            "eic",
+            "european innovation council",
+            "european",
+            "eu-wide",
+            "eu wide",
+            "brussels",
+        )
+    )
+
+    if pack == "DE":
+        return is_germany
+
+    if pack == "UK":
+        return is_uk
+
+    if pack == "AFRICA":
+        return is_africa
+
+    if pack == "EU":
+        return is_eu or is_germany
+
+    return False
+
+
 def pick_top(grants: List[dict], profile: dict, limit: int = 20) -> List[dict]:
     """
     Score and pick top grants for a profile.
@@ -74,7 +187,6 @@ def filter_repeat_sends(
     Returns (filtered_grants, fingerprints_of_filtered_grants).
     """
     if not subscriber_id:
-        # If no subscriber_id provided, we can't track; allow all.
         fps = [fp for g in grants if (fp := _ensure_fingerprint(g))]
         return grants, fps
 
@@ -109,8 +221,10 @@ def generate_digest_for_pack(
     Returns:
       (subject, html, item_count, fingerprints_sent)
 
-    Applies duplicate suppression:
-      - a subscriber can receive the same grant at most `max_repeat` times.
+    Applies:
+      - hard pack eligibility filtering
+      - duplicate suppression
+      - score-based ranking
     """
     pack = pack.upper().strip()
     if pack not in PACK_TO_PROFILE:
@@ -118,20 +232,20 @@ def generate_digest_for_pack(
 
     profile = load_profile(pack)
 
-    # Pull all grants from SQLite (already ingested by run.py / scan)
-    grants = get_all_grants()  # <-- rename if your function differs
+    # Pull all grants from SQLite, then hard-filter for this pack
+    grants = get_all_grants()
+    eligible = [g for g in grants if is_pack_eligible(g, pack)]
 
-    # Pick top based on scoring
+    # Pick top based on scoring within eligible grants only
     top_n = int(profile.get("top_n", 20))
-    picked = pick_top(grants, profile, limit=top_n)
+    picked = pick_top(eligible, profile, limit=top_n)
 
     # Apply repeat-suppression per subscriber
     sid = (subscriber_id or "").strip()
     filtered, fps_sent = filter_repeat_sends(sid, picked, max_repeat=max_repeat)
 
-    # Render HTML
-    # NOTE: your digest renderer supports list mode (single pack)
-    html = render_digest_html(filtered)
+    # Render HTML in single-pack mode
+    html = render_digest_html(filtered, pack=pack)
 
     subject = f"RubixScout — {pack} Funding Digest"
     return subject, html, len(filtered), fps_sent
