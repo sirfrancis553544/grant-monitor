@@ -29,6 +29,29 @@ from store import upsert_grant
 
 DB_PATH = "data/grants.db"
 
+CREATOR_TERMS = {
+    "creator economy",
+    "content creator",
+    "creator",
+    "podcast",
+    "podcaster",
+    "social media",
+    "influencer",
+    "digital media",
+    "media startup",
+    "creator tools",
+    "creator platform",
+    "digital content",
+    "online media",
+    "youtube",
+    "tiktok",
+    "streaming",
+    "audience growth",
+    "media innovation",
+    "creative technology",
+    "creative industries",
+}
+
 
 def canonical_url(u: str | None) -> str | None:
     if not u:
@@ -50,10 +73,6 @@ def load_profiles() -> dict[str, dict[str, Any]]:
 
 
 def apply_source_cap(items: list[dict], max_per_source: int = 3) -> list[dict]:
-    """
-    Keep ranked order, but limit how many items from the same source
-    can appear in the final digest list.
-    """
     out: list[dict] = []
     counts: dict[str, int] = {}
 
@@ -128,6 +147,10 @@ def _text_blob(g: dict) -> str:
     return " ".join(str(x or "") for x in parts).lower()
 
 
+def _contains_creator_terms(blob: str) -> bool:
+    return any(term in blob for term in CREATOR_TERMS)
+
+
 def _parse_date(raw: Any):
     if not raw:
         return None
@@ -174,13 +197,6 @@ def _parse_date(raw: Any):
 
 
 def _looks_like_actionable_opportunity(g: dict) -> bool:
-    """
-    Final quality gate before anything is scored/stored for digest output.
-
-    Goal:
-    - keep real funding/application opportunities
-    - reject recap/news/resource/blog/event pages
-    """
     blob = _text_blob(g)
 
     good_terms = [
@@ -220,7 +236,6 @@ def _looks_like_actionable_opportunity(g: dict) -> bool:
         "video",
         "webinar",
         "workshop",
-        "podcast",
         "press release",
         "portfolio company",
         "success story",
@@ -231,15 +246,13 @@ def _looks_like_actionable_opportunity(g: dict) -> bool:
     ]
 
     if any(term in blob for term in bad_terms):
-        return False
+        if not (_contains_creator_terms(blob) and any(term in blob for term in good_terms)):
+            return False
 
     return any(term in blob for term in good_terms)
 
 
 def _is_stale_or_expired(g: dict) -> bool:
-    """
-    Reject obviously expired or stale content.
-    """
     deadline = g.get("deadline_date")
     parsed = _parse_date(deadline)
 
@@ -274,9 +287,6 @@ def _is_stale_or_expired(g: dict) -> bool:
 
 
 def _has_minimum_signal(g: dict) -> bool:
-    """
-    Avoid sending garbage rows that have almost no usable metadata.
-    """
     title = (g.get("title") or "").strip()
     url = (g.get("url") or "").strip()
     summary = (g.get("summary") or "").strip()
@@ -307,9 +317,6 @@ def _has_minimum_signal(g: dict) -> bool:
 
 
 def validate_grant(g: dict) -> bool:
-    """
-    Final validation layer used across all packs before scoring.
-    """
     if not _has_minimum_signal(g):
         return False
 
@@ -487,9 +494,6 @@ def main():
 
     inserted = changed = total = 0
 
-    # -----------------------
-    # 1) Ingest all sources
-    # -----------------------
     for s in sources_cfg.get("sources", []):
         if s.get("enabled") is False:
             continue
@@ -620,9 +624,6 @@ def main():
 
     conn.commit()
 
-    # ------------------------------------
-    # 2) Pull recent items and normalize
-    # ------------------------------------
     order_col = "last_seen" if _has_column(conn, "grants", "last_seen") else "date_found"
     rows = conn.execute(
         "SELECT title, funder, summary, eligibility_notes, deadline_date, "
@@ -668,9 +669,6 @@ def main():
 
         normalized.append(gg)
 
-    # ------------------------------------
-    # 3) Hard filter by pack, then score
-    # ------------------------------------
     STORE_LIMIT_PER_PACK = 200
 
     sections: dict[str, list[dict]] = {}
@@ -707,9 +705,6 @@ def main():
         capped_for_store = apply_source_cap(scored, max_per_source=10)
         store_sections[key] = capped_for_store[:STORE_LIMIT_PER_PACK]
 
-    # ------------------------------------
-    # 4) Apply main vs bonus rule
-    # ------------------------------------
     sections["DE"] = [
         g for g in sections.get("DE", []) if g.get("source") not in BONUS_SOURCES
     ]
@@ -725,9 +720,6 @@ def main():
     store_sections.setdefault("UK", [])
     store_sections.setdefault("AFRICA", [])
 
-    # ------------------------------------
-    # 4.5) Upsert larger pool into Supabase
-    # ------------------------------------
     try:
         supa_total = 0
         for pack, items in store_sections.items():
@@ -741,15 +733,9 @@ def main():
     except Exception as e:
         print("⚠️ Supabase upsert skipped/failed:", str(e))
 
-    # ------------------------------------
-    # 5) Write outputs
-    # ------------------------------------
     json_path, csv_path, html_path = write_outputs(sections, out_dir="data")
     digest_html = Path(html_path).read_text(encoding="utf-8")
 
-    # ------------------------------------
-    # 6) Email sending + reminders
-    # ------------------------------------
     if args.send:
         to_email = os.environ.get("GM_TO", "me")
         send_html_email(subject="Grant Digest", html=digest_html, to_email=to_email)
@@ -768,9 +754,6 @@ def main():
                 )
                 print(f"✅ Sent {days}-day reminder to", to_email)
 
-    # ------------------------------------
-    # 7) Console summary
-    # ------------------------------------
     print("Done.")
     print(f"Ingested items: {total} | inserted: {inserted} | changed: {changed}")
     print(f"Rejected by quality gate: {rejected_quality}")

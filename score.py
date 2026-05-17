@@ -54,9 +54,6 @@ def _unique_keep_order(items: List[str], limit: Optional[int] = None) -> List[st
 
 
 def _region_score(scope: str, country: str) -> Tuple[int, List[str]]:
-    """
-    Strong region fit scoring.
-    """
     why: List[str] = []
     scope_u = (scope or "").strip().upper()
     country_u = (country or "").strip().upper()
@@ -162,6 +159,40 @@ def _funding_score(g: dict) -> Tuple[int, List[str]]:
     return 3, [f"high funding level: {int(amt):,}"]
 
 
+def _creator_economy_score(blob: str) -> Tuple[int, List[str]]:
+    creator_keywords = [
+        "creator economy",
+        "content creator",
+        "creator",
+        "podcast",
+        "podcaster",
+        "social media",
+        "influencer",
+        "digital media",
+        "media startup",
+        "creator tools",
+        "creator platform",
+        "digital content",
+        "online media",
+        "youtube",
+        "tiktok",
+        "streaming",
+        "audience growth",
+        "media innovation",
+        "creative technology",
+    ]
+
+    hits = [k for k in creator_keywords if k in blob]
+
+    if not hits:
+        return 0, []
+
+    score = min(6, len(hits) * 2)
+    why = [f"creator-economy relevance: {', '.join(_unique_keep_order(hits, limit=4))}"]
+
+    return score, why
+
+
 def _startup_fit_score(title: str, summary: str, eligibility: str, themes: str) -> Tuple[int, List[str]]:
     why: List[str] = []
     blob = " ".join([title, summary, eligibility, themes]).lower()
@@ -262,6 +293,11 @@ def score_grant(g: dict, profile: dict) -> Tuple[int, List[str]]:
         elif k in summary or k in eligibility:
             score += 1
             why.append(f"summary match: {k}")
+
+    creator_blob = " ".join([title, summary, eligibility, themes])
+    creator_s, creator_why = _creator_economy_score(creator_blob)
+    score += creator_s
+    why.extend(creator_why)
 
     region_s, region_why = _region_score(scope, country)
     score += region_s
