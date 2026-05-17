@@ -7,7 +7,7 @@ sources:
     name: "Förderdatenbank Programme"
     funder: "Förderdatenbank"
     location_scope: "DE"
-    themes: ["grant", "innovation", "sme"]
+    themes: ["grant", "innovation", "sme", "digitalisation", "digital media", "creator economy", "creative technology"]
     url: "https://www.foerderdatenbank.de/FDB/DE/Service/RSS/Functions/foerderprogram_rssnewsfeed.xml"
 
   - id: kfw_press
@@ -15,7 +15,7 @@ sources:
     name: "KfW Press"
     funder: "KfW"
     location_scope: "DE"
-    themes: ["finance", "sme"]
+    themes: ["finance", "sme", "digitalisation", "creator economy", "digital media"]
     url: "http://www.kfw.de/kfw/de/KfW-Konzern/Medien/RssPressDe.xml"
 
   - id: kfw_news
@@ -23,7 +23,7 @@ sources:
     name: "KfW News"
     funder: "KfW"
     location_scope: "DE"
-    themes: ["finance", "sme"]
+    themes: ["finance", "sme", "digitalisation", "creator economy", "digital media"]
     url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssNewsDe.xml"
 
   - id: kfw_research
@@ -31,7 +31,7 @@ sources:
     name: "KfW Research"
     funder: "KfW"
     location_scope: "DE"
-    themes: ["research", "economy"]
+    themes: ["research", "economy", "digitalisation", "creative industries"]
     url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssResearchDe.xml"
 
   - id: berlin_ibb_programs
@@ -39,7 +39,7 @@ sources:
     name: "IBB Förderprogramme"
     funder: "Investitionsbank Berlin (IBB)"
     location_scope: "Berlin"
-    themes: ["startup", "innovation", "sme"]
+    themes: ["startup", "innovation", "sme", "creative industries", "media startup", "digital media", "creator economy"]
     url: "https://www.ibb.de/de/foerderprogramme.html"
 
   # Future DE sources - require parser support
@@ -48,7 +48,7 @@ sources:
     name: "EXIST Programme"
     funder: "BMWK / EXIST"
     location_scope: "DE"
-    themes: ["startup", "university", "innovation"]
+    themes: ["startup", "university", "innovation", "digital media", "creator tools"]
     url: "https://www.exist.de"
     enabled: false
 
@@ -57,8 +57,26 @@ sources:
     name: "ZIM Programme"
     funder: "BMWK"
     location_scope: "DE"
-    themes: ["innovation", "r&d", "sme"]
+    themes: ["innovation", "r&d", "sme", "creative technology", "digital media"]
     url: "https://www.zim.de"
+    enabled: false
+
+  - id: kreativ_kultur_bund
+    type: html
+    name: "Creative Industries / Kultur- und Kreativwirtschaft Funding"
+    funder: "Germany Creative Industries / BMWK"
+    location_scope: "DE"
+    themes: ["creative industries", "digital media", "creator economy", "content creator", "media innovation", "creative technology"]
+    url: "https://www.kultur-kreativ-wirtschaft.de"
+    enabled: false
+
+  - id: medienboard_berlin_brandenburg
+    type: html
+    name: "Medienboard Berlin-Brandenburg Funding"
+    funder: "Medienboard Berlin-Brandenburg"
+    location_scope: "Berlin"
+    themes: ["film", "digital media", "content", "media innovation", "creative technology", "podcast", "streaming"]
+    url: "https://www.medienboard.de/foerderung/"
     enabled: false
 
   # ----------------------------
@@ -69,7 +87,7 @@ sources:
     name: "EIC Accelerator"
     funder: "European Innovation Council (EIC)"
     location_scope: "EU"
-    themes: ["startup", "deeptech", "grant", "equity"]
+    themes: ["startup", "deeptech", "grant", "equity", "creator tools", "digital media", "creative technology"]
     url: "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
 
   - id: eu_funding_tenders_calls
@@ -77,7 +95,7 @@ sources:
     name: "EU Funding & Tenders Calls"
     funder: "European Commission"
     location_scope: "EU"
-    themes: ["grant", "sme", "innovation"]
+    themes: ["grant", "sme", "innovation", "digital media", "creative industries", "media innovation"]
     url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals"
     enabled: false
 
@@ -87,7 +105,7 @@ sources:
     name: "European Institute of Innovation & Technology"
     funder: "EIT"
     location_scope: "EU"
-    themes: ["innovation", "startup", "scaleup"]
+    themes: ["innovation", "startup", "scaleup", "creative technology", "digital media"]
     url: "https://eit.europa.eu/our-activities/opportunities"
     enabled: false
 
@@ -96,7 +114,7 @@ sources:
     name: "EU Cascade Funding"
     funder: "European Commission / Consortia"
     location_scope: "EU"
-    themes: ["startup", "innovation", "sme"]
+    themes: ["startup", "innovation", "sme", "digital media", "creator tools", "creative technology"]
     url: "https://cascadefunding.eu"
     enabled: false
 
@@ -105,8 +123,26 @@ sources:
     name: "Eurostars"
     funder: "Eureka / Eurostars"
     location_scope: "EU"
-    themes: ["r&d", "sme", "innovation"]
+    themes: ["r&d", "sme", "innovation", "creative technology", "digital media"]
     url: "https://www.eurekanetwork.org/programmes/eurostars/"
+    enabled: false
+
+  - id: creative_europe_calls
+    type: html
+    name: "Creative Europe Calls"
+    funder: "European Commission / Creative Europe"
+    location_scope: "EU"
+    themes: ["creative industries", "digital media", "content", "media innovation", "film", "audio", "podcast", "creator economy"]
+    url: "https://culture.ec.europa.eu/creative-europe/calls"
+    enabled: false
+
+  - id: journalismfund_europe
+    type: html
+    name: "Journalismfund Europe"
+    funder: "Journalismfund Europe"
+    location_scope: "EU"
+    themes: ["journalism", "digital media", "media innovation", "content", "creator economy"]
+    url: "https://www.journalismfund.eu/grants"
     enabled: false
 
   # ----------------------------
@@ -117,7 +153,7 @@ sources:
     name: "Innovate UK Competitions"
     funder: "Innovate UK"
     location_scope: "UK"
-    themes: ["grant", "competition", "r&d", "innovation"]
+    themes: ["grant", "competition", "r&d", "innovation", "creative technology", "digital media", "creator tools"]
     url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
 
   # Future UK sources - require parser support
@@ -126,7 +162,7 @@ sources:
     name: "UKRI Funding Finder"
     funder: "UKRI"
     location_scope: "UK"
-    themes: ["research", "innovation", "grant"]
+    themes: ["research", "innovation", "grant", "creative industries", "digital media"]
     url: "https://www.ukri.org/opportunity/"
     enabled: false
 
@@ -135,8 +171,26 @@ sources:
     name: "DSIT Opportunities"
     funder: "DSIT"
     location_scope: "UK"
-    themes: ["tech", "ai", "innovation"]
+    themes: ["tech", "ai", "innovation", "creator tools", "digital media"]
     url: "https://www.gov.uk/government/organisations/department-for-science-innovation-and-technology"
+    enabled: false
+
+  - id: creative_uk_opportunities
+    type: html
+    name: "Creative UK Opportunities"
+    funder: "Creative UK"
+    location_scope: "UK"
+    themes: ["creative industries", "creator economy", "digital media", "content creator", "media startup", "creative technology"]
+    url: "https://www.wearecreative.uk/support/"
+    enabled: false
+
+  - id: bfi_funding
+    type: html
+    name: "BFI Funding"
+    funder: "British Film Institute"
+    location_scope: "UK"
+    themes: ["film", "digital media", "content", "streaming", "creative industries", "media innovation"]
+    url: "https://www.bfi.org.uk/get-funding-support"
     enabled: false
 
   # ----------------------------
@@ -147,7 +201,7 @@ sources:
     name: "Tony Elumelu Foundation (TEF)"
     funder: "Tony Elumelu Foundation"
     location_scope: "Africa"
-    themes: ["startup", "seed", "training"]
+    themes: ["startup", "seed", "training", "digital media", "creator economy", "creative business"]
     url: "https://www.tonyelumelufoundation.org/press-releases/apply-tef-entrepreneurship-programme-2026"
     programme_url: "https://www.tonyelumelufoundation.org/tef-entrepreneurship-programme"
 
@@ -156,7 +210,7 @@ sources:
     name: "AECF Funding Opportunities"
     funder: "Africa Enterprise Challenge Fund"
     location_scope: "Africa"
-    themes: ["challenge_fund", "sme", "startup", "climate"]
+    themes: ["challenge_fund", "sme", "startup", "climate", "digital media", "creator tools"]
     url: "https://www.aecfafrica.org/im-looking-to/see-aecfs-funding-opportunities/"
 
   # Future Africa sources - require parser support
@@ -165,7 +219,7 @@ sources:
     name: "GSMA Innovation Fund"
     funder: "GSMA"
     location_scope: "Africa"
-    themes: ["tech", "mobile", "startup"]
+    themes: ["tech", "mobile", "startup", "creator tools", "digital content", "social media"]
     url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
 
   - id: afdb_opportunities
@@ -173,7 +227,7 @@ sources:
     name: "African Development Bank Opportunities"
     funder: "African Development Bank"
     location_scope: "Africa"
-    themes: ["business", "sme", "innovation", "development"]
+    themes: ["business", "sme", "innovation", "development", "digital media", "creative industries"]
     url: "https://www.afdb.org/en/projects-and-operations/procurement"
     enabled: false
 
@@ -182,7 +236,7 @@ sources:
     name: "Mercy Corps Ventures"
     funder: "Mercy Corps Ventures"
     location_scope: "Africa"
-    themes: ["startup", "seed", "fintech", "climate"]
+    themes: ["startup", "seed", "fintech", "climate", "digital media", "creator tools"]
     url: "https://www.mercycorpsventures.org"
     enabled: false
 
@@ -191,6 +245,24 @@ sources:
     name: "Village Capital Africa"
     funder: "Village Capital"
     location_scope: "Africa"
-    themes: ["startup", "accelerator", "investment"]
+    themes: ["startup", "accelerator", "investment", "creator economy", "digital media"]
     url: "https://vilcap.com"
+    enabled: false
+
+  - id: heva_fund
+    type: html
+    name: "HEVA Fund"
+    funder: "HEVA Fund"
+    location_scope: "Africa"
+    themes: ["creative industries", "creative business", "digital media", "content", "creator economy", "media innovation"]
+    url: "https://www.hevafund.com/"
+    enabled: false
+
+  - id: africacreates_opportunities
+    type: html
+    name: "Africa Creates Opportunities"
+    funder: "Africa Creates"
+    location_scope: "Africa"
+    themes: ["creative industries", "creator economy", "digital media", "content creator", "social media", "podcast"]
+    url: "https://africacreates.net/"
     enabled: false
