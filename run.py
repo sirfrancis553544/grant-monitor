@@ -32,6 +32,8 @@ DB_PATH = "data/grants.db"
 
 CREATOR_TERMS = {"creator economy", "content creator", "creator", "podcast", "podcaster", "social media", "influencer", "digital media", "media startup", "creator tools", "creator platform", "digital content", "online media", "youtube", "tiktok", "streaming", "audience growth", "media innovation", "creative technology", "creative industries"}
 SOURCE_LEVEL_TERMS = {"local": ["local government", "local authority", "council", "city", "county", "municipal", "borough", "mayor", "wirtschaftsförderung", "stadt", "gemeinde", "landkreis"], "regional": ["regional", "state", "scotland", "wales", "northern ireland", "nrw", "bavaria", "baden", "hamburg", "berlin", "hessen", "brandenburg", "interreg", "erdf", "efre"], "national": ["national", "federal", "ministry", "bundesministerium", "kfw", "innovate uk", "ukri", "grants.gov", "sbir", "sttr", "european commission", "eic", "horizon europe"]}
+BAD_TITLE_EXACT = {"read now", "learn more", "apply now", "click here", "find out more", "read more", "view all", "see all", "all grants", "all funding", "im looking to", "i'm looking to"}
+BAD_TITLE_PARTS = ["see aecf", "funding opportunities", "previous innovation funds", "read now", "learn more", "click here", "find out more", "see all", "view all", "i'm looking to", "im looking to"]
 
 def canonical_url(u: str | None) -> str | None:
     if not u:
@@ -42,7 +44,7 @@ def load_yaml(path: str) -> Any:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 def load_profiles() -> dict[str, dict[str, Any]]:
-    return {"DE": load_yaml("profiles/germany_startup.yaml"), "EU": load_yaml("profiles/eu_startup.yaml"), "UK": load_yaml("profiles/uk_startup.yaml"), "AFRICA": load_yaml("profiles/africa_startup.yaml")}
+    return {"DE": load_yaml("profiles/germany_startup.yaml"), "EU": load_yaml("profiles/eu_startup.yaml"), "UK": load_yaml("profiles/uk_startup.yaml"), "AFRICA": load_yaml("profiles/africa_startup.yaml"), "US": load_yaml("profiles/us_startup.yaml")}
 
 def safe_fetch(source_id: str, fetcher: Callable[[], list[dict] | None]) -> list[dict]:
     try:
@@ -50,6 +52,19 @@ def safe_fetch(source_id: str, fetcher: Callable[[], list[dict] | None]) -> list
     except Exception as exc:
         print(f"⚠️ source skipped {source_id}: {exc}")
         return []
+
+def is_bad_title(title: str | None) -> bool:
+    raw = (title or "").strip()
+    t = re.sub(r"\s+", " ", raw.lower())
+    if not t or len(t) < 12:
+        return True
+    if t in BAD_TITLE_EXACT:
+        return True
+    if any(part in t for part in BAD_TITLE_PARTS):
+        return True
+    if t.endswith("...") or t in {"home", "about", "contact", "resources", "opportunities"}:
+        return True
+    return False
 
 def source_level(g: dict) -> str:
     blob = _text_blob(g)
@@ -154,7 +169,7 @@ def _parse_date(raw: Any):
 
 def _looks_like_actionable_opportunity(g: dict) -> bool:
     blob = _text_blob(g)
-    good_terms = ["grant", "fund", "funding", "apply", "application", "open call", "call for applications", "call for proposals", "competition", "challenge fund", "innovation fund", "request for proposals", "rfp", "deadline", "eligibility", "submit", "co-financing", "finance", "business support"]
+    good_terms = ["grant", "fund", "funding", "apply", "application", "open call", "call for applications", "call for proposals", "competition", "challenge fund", "innovation fund", "request for proposals", "rfp", "deadline", "eligibility", "submit", "co-financing", "finance", "business support", "loan", "voucher", "subsidy", "sbir", "sttr"]
     bad_terms = ["bootcamp", "highlights", "highlight", "event", "events", "news", "blog", "article", "story", "case study", "report", "resource", "resources", "video", "webinar", "workshop", "press release", "portfolio company", "success story", "meet the cohort", "cohort spotlight", "conference", "summit"]
     if any(term in blob for term in bad_terms):
         if not (_contains_creator_terms(blob) and any(term in blob for term in good_terms)):
@@ -175,7 +190,7 @@ def _is_stale_or_expired(g: dict) -> bool:
 def _has_minimum_signal(g: dict) -> bool:
     title = (g.get("title") or "").strip()
     url = (g.get("url") or "").strip()
-    if not title or not url or len(title) < 8 or url.startswith("#") or url.startswith("mailto:"):
+    if not title or not url or is_bad_title(title) or url.startswith("#") or url.startswith("mailto:"):
         return False
     useful_fields = 0
     for key in ("summary", "location_scope", "deadline_date", "eligibility_notes"):
@@ -278,7 +293,7 @@ def main():
         elif s.get("type") == "rss":
             items = safe_fetch(source_id, lambda: fetch_rss(feed_url=s["url"], source_name=s.get("name") or s.get("id") or "unknown_source", default_funder=s.get("funder") or s.get("name") or s.get("id") or "unknown_funder", location_scope=s.get("location_scope", "DE"), themes=s.get("themes", [])))
         for g in items:
-            if not (g.get("title") and g.get("url")):
+            if not (g.get("title") and g.get("url")) or is_bad_title(g.get("title")):
                 continue
             _ensure_fingerprint(g)
             total += 1
