@@ -7,7 +7,7 @@ sources:
     name: "Förderdatenbank Programme"
     funder: "Förderdatenbank"
     location_scope: "DE"
-    themes: ["grant", "innovation", "sme"]
+    themes: ["grant", "innovation", "sme", "digitalisation", "digital media", "creator economy", "creative technology", "national"]
     url: "https://www.foerderdatenbank.de/FDB/DE/Service/RSS/Functions/foerderprogram_rssnewsfeed.xml"
 
   - id: kfw_press
@@ -15,7 +15,7 @@ sources:
     name: "KfW Press"
     funder: "KfW"
     location_scope: "DE"
-    themes: ["finance", "sme"]
+    themes: ["finance", "sme", "digitalisation", "creator economy", "digital media", "national"]
     url: "http://www.kfw.de/kfw/de/KfW-Konzern/Medien/RssPressDe.xml"
 
   - id: kfw_news
@@ -23,7 +23,7 @@ sources:
     name: "KfW News"
     funder: "KfW"
     location_scope: "DE"
-    themes: ["finance", "sme"]
+    themes: ["finance", "sme", "digitalisation", "creator economy", "digital media", "national"]
     url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssNewsDe.xml"
 
   - id: kfw_research
@@ -31,7 +31,7 @@ sources:
     name: "KfW Research"
     funder: "KfW"
     location_scope: "DE"
-    themes: ["research", "economy"]
+    themes: ["research", "economy", "digitalisation", "creative industries", "national"]
     url: "http://kfw.de/kfw/de/KfW-Konzern/Medien/RssResearchDe.xml"
 
   - id: berlin_ibb_programs
@@ -39,26 +39,43 @@ sources:
     name: "IBB Förderprogramme"
     funder: "Investitionsbank Berlin (IBB)"
     location_scope: "Berlin"
-    themes: ["startup", "innovation", "sme"]
+    themes: ["startup", "innovation", "sme", "creative industries", "media startup", "digital media", "creator economy", "regional", "local government"]
     url: "https://www.ibb.de/de/foerderprogramme.html"
 
-  # Future DE sources - require parser support
-  - id: exist_programme
+  - id: nrw_bank_foerderprogramme
+    type: generic_html
+    name: "NRW.BANK Förderprogramme"
+    funder: "NRW.BANK"
+    location_scope: "North Rhine-Westphalia"
+    themes: ["startup", "sme", "innovation", "digitalisation", "regional", "local government"]
+    url: "https://www.nrwbank.de/de/foerderung/foerderprodukte/"
+    max_items: 20
+
+  - id: l_bank_baden_wuerttemberg
     type: html
-    name: "EXIST Programme"
-    funder: "BMWK / EXIST"
-    location_scope: "DE"
-    themes: ["startup", "university", "innovation"]
-    url: "https://www.exist.de"
+    name: "L-Bank Förderprogramme"
+    funder: "L-Bank Baden-Württemberg"
+    location_scope: "Baden-Württemberg"
+    themes: ["startup", "sme", "innovation", "digitalisation", "regional", "local government"]
+    url: "https://www.l-bank.de/produkte/finanzhilfen.html"
     enabled: false
 
-  - id: zim_programme
+  - id: bayern_innovativ_foerderung
     type: html
-    name: "ZIM Programme"
-    funder: "BMWK"
-    location_scope: "DE"
-    themes: ["innovation", "r&d", "sme"]
-    url: "https://www.zim.de"
+    name: "Bayern Innovativ Förderung"
+    funder: "Bayern Innovativ / Freistaat Bayern"
+    location_scope: "Bavaria"
+    themes: ["startup", "innovation", "r&d", "sme", "regional", "local government"]
+    url: "https://www.bayern-innovativ.de/de/seite/foerderung"
+    enabled: false
+
+  - id: ifb_hamburg_foerderprogramme
+    type: html
+    name: "IFB Hamburg Förderprogramme"
+    funder: "Investitions- und Förderbank Hamburg"
+    location_scope: "Hamburg"
+    themes: ["startup", "sme", "innovation", "digitalisation", "regional", "local government"]
+    url: "https://www.ifbhh.de/foerderprogramm"
     enabled: false
 
   # ----------------------------
@@ -69,44 +86,51 @@ sources:
     name: "EIC Accelerator"
     funder: "European Innovation Council (EIC)"
     location_scope: "EU"
-    themes: ["startup", "deeptech", "grant", "equity"]
+    themes: ["startup", "deeptech", "grant", "equity", "creator tools", "digital media", "creative technology", "national"]
     url: "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
+
+  - id: eu_funding_tenders_rss
+    type: rss
+    name: "EU Funding & Tenders RSS"
+    funder: "European Commission"
+    location_scope: "EU"
+    themes: ["grant", "funding", "call", "innovation", "sme", "research", "digital", "technology", "horizon europe", "eic", "national"]
+    url: "https://ec.europa.eu/info/funding-tenders/opportunities/data/referenceData/callupdates-rss.xml"
 
   - id: eu_funding_tenders_calls
     type: html
     name: "EU Funding & Tenders Calls"
     funder: "European Commission"
     location_scope: "EU"
-    themes: ["grant", "sme", "innovation"]
+    themes: ["grant", "sme", "innovation", "digital media", "creative industries", "media innovation", "national"]
     url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals"
     enabled: false
 
-  # Future EU sources - require parser support
-  - id: eit_funding
-    type: html
-    name: "European Institute of Innovation & Technology"
-    funder: "EIT"
+  - id: interreg_programmes
+    type: generic_html
+    name: "Interreg Programmes"
+    funder: "Interreg / European Regional Development Fund"
     location_scope: "EU"
-    themes: ["innovation", "startup", "scaleup"]
-    url: "https://eit.europa.eu/our-activities/opportunities"
+    themes: ["regional", "cross-border", "innovation", "sme", "digital", "regional development"]
+    url: "https://interreg.eu/"
+    max_items: 20
+
+  - id: erdf_regional_programmes
+    type: html
+    name: "ERDF Regional Programmes"
+    funder: "European Regional Development Fund"
+    location_scope: "EU"
+    themes: ["regional", "local government", "sme", "innovation", "digitalisation", "regional development"]
+    url: "https://ec.europa.eu/regional_policy/funding/erdf_en"
     enabled: false
 
-  - id: cascade_funding_eu
+  - id: creative_europe_calls
     type: html
-    name: "EU Cascade Funding"
-    funder: "European Commission / Consortia"
+    name: "Creative Europe Calls"
+    funder: "European Commission / Creative Europe"
     location_scope: "EU"
-    themes: ["startup", "innovation", "sme"]
-    url: "https://cascadefunding.eu"
-    enabled: false
-
-  - id: eurostars
-    type: html
-    name: "Eurostars"
-    funder: "Eureka / Eurostars"
-    location_scope: "EU"
-    themes: ["r&d", "sme", "innovation"]
-    url: "https://www.eurekanetwork.org/programmes/eurostars/"
+    themes: ["creative industries", "digital media", "content", "media innovation", "film", "audio", "podcast", "creator economy", "sector"]
+    url: "https://culture.ec.europa.eu/creative-europe/calls"
     enabled: false
 
   # ----------------------------
@@ -117,26 +141,90 @@ sources:
     name: "Innovate UK Competitions"
     funder: "Innovate UK"
     location_scope: "UK"
-    themes: ["grant", "competition", "r&d", "innovation"]
+    themes: ["grant", "competition", "r&d", "innovation", "creative technology", "digital media", "creator tools", "national"]
     url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
 
-  # Future UK sources - require parser support
+  - id: ukri_opportunity_rss
+    type: rss
+    name: "UKRI Opportunity Feed"
+    funder: "UKRI"
+    location_scope: "UK"
+    themes: ["grant", "funding", "research", "innovation", "sme", "technology", "digital", "creative industries", "national"]
+    url: "https://www.ukri.org/opportunity/feed/"
+
   - id: ukri_funding
     type: html
     name: "UKRI Funding Finder"
     funder: "UKRI"
     location_scope: "UK"
-    themes: ["research", "innovation", "grant"]
+    themes: ["research", "innovation", "grant", "creative industries", "digital media", "national"]
     url: "https://www.ukri.org/opportunity/"
     enabled: false
 
-  - id: dsit_opportunities
+  - id: scottish_enterprise_funding
+    type: generic_html
+    name: "Scottish Enterprise Funding"
+    funder: "Scottish Enterprise"
+    location_scope: "Scotland"
+    themes: ["startup", "sme", "innovation", "regional", "local government", "business growth"]
+    url: "https://www.scottish-enterprise.com/support-for-businesses/funding-and-grants"
+    max_items: 20
+
+  - id: business_wales_finance
+    type: generic_html
+    name: "Business Wales Finance and Grants"
+    funder: "Business Wales"
+    location_scope: "Wales"
+    themes: ["startup", "sme", "innovation", "regional", "local government", "business support"]
+    url: "https://businesswales.gov.wales/finance"
+    max_items: 20
+
+  - id: invest_ni_support
     type: html
-    name: "DSIT Opportunities"
-    funder: "DSIT"
-    location_scope: "UK"
-    themes: ["tech", "ai", "innovation"]
-    url: "https://www.gov.uk/government/organisations/department-for-science-innovation-and-technology"
+    name: "Invest Northern Ireland Support"
+    funder: "Invest Northern Ireland"
+    location_scope: "Northern Ireland"
+    themes: ["startup", "sme", "innovation", "regional", "local government", "business support"]
+    url: "https://www.investni.com/support-for-business"
+    enabled: false
+
+  - id: london_growth_hub
+    type: html
+    name: "London Business Funding"
+    funder: "Grow London Local / London Growth Hub"
+    location_scope: "London"
+    themes: ["startup", "sme", "innovation", "local government", "business support"]
+    url: "https://www.growlondonlocal.london/"
+    enabled: false
+
+  # ----------------------------
+  # UNITED STATES
+  # ----------------------------
+  - id: grants_gov
+    type: custom
+    name: "Grants.gov"
+    funder: "U.S. Federal Government"
+    location_scope: "US"
+    themes: ["grant", "federal", "national", "sme", "research", "innovation", "startup", "sbir", "sttr", "technology"]
+    url: "https://simpler.grants.gov/search?utm_source=Grants.gov"
+    max_items: 80
+
+  - id: sbir_sttr
+    type: html
+    name: "SBIR/STTR"
+    funder: "U.S. Small Business Administration"
+    location_scope: "US"
+    themes: ["startup", "sme", "research", "innovation", "federal", "national"]
+    url: "https://www.sbir.gov/funding"
+    enabled: false
+
+  - id: california_go_biz
+    type: html
+    name: "California GO-Biz"
+    funder: "California Governor's Office of Business and Economic Development"
+    location_scope: "California"
+    themes: ["startup", "sme", "innovation", "regional", "local government", "business support"]
+    url: "https://business.ca.gov/advantages/financial-assistance/"
     enabled: false
 
   # ----------------------------
@@ -147,7 +235,7 @@ sources:
     name: "Tony Elumelu Foundation (TEF)"
     funder: "Tony Elumelu Foundation"
     location_scope: "Africa"
-    themes: ["startup", "seed", "training"]
+    themes: ["startup", "seed", "training", "digital media", "creator economy", "creative business", "sector"]
     url: "https://www.tonyelumelufoundation.org/press-releases/apply-tef-entrepreneurship-programme-2026"
     programme_url: "https://www.tonyelumelufoundation.org/tef-entrepreneurship-programme"
 
@@ -156,41 +244,57 @@ sources:
     name: "AECF Funding Opportunities"
     funder: "Africa Enterprise Challenge Fund"
     location_scope: "Africa"
-    themes: ["challenge_fund", "sme", "startup", "climate"]
+    themes: ["challenge_fund", "sme", "startup", "climate", "digital media", "creator tools", "sector"]
     url: "https://www.aecfafrica.org/im-looking-to/see-aecfs-funding-opportunities/"
 
-  # Future Africa sources - require parser support
   - id: gsma_innovation_fund
     type: html
     name: "GSMA Innovation Fund"
     funder: "GSMA"
     location_scope: "Africa"
-    themes: ["tech", "mobile", "startup"]
+    themes: ["tech", "mobile", "startup", "creator tools", "digital content", "social media", "sector"]
     url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
+
+  - id: afdb_rss
+    type: rss
+    name: "African Development Bank RSS"
+    funder: "African Development Bank"
+    location_scope: "Africa"
+    themes: ["funding", "development", "business", "sme", "innovation", "regional"]
+    url: "https://www.afdb.org/en/news-and-events/adf/rss"
 
   - id: afdb_opportunities
     type: html
     name: "African Development Bank Opportunities"
     funder: "African Development Bank"
     location_scope: "Africa"
-    themes: ["business", "sme", "innovation", "development"]
+    themes: ["business", "sme", "innovation", "development", "digital media", "creative industries", "regional"]
     url: "https://www.afdb.org/en/projects-and-operations/procurement"
     enabled: false
 
-  - id: mercycorps_ventures
+  - id: kenya_private_sector_alliance
     type: html
-    name: "Mercy Corps Ventures"
-    funder: "Mercy Corps Ventures"
-    location_scope: "Africa"
-    themes: ["startup", "seed", "fintech", "climate"]
-    url: "https://www.mercycorpsventures.org"
+    name: "Kenya Private Sector Alliance Opportunities"
+    funder: "KEPSA / Kenya Private Sector Alliance"
+    location_scope: "Kenya"
+    themes: ["startup", "sme", "innovation", "local government", "business support"]
+    url: "https://kepsa.or.ke/opportunities/"
     enabled: false
 
-  - id: village_capital_africa
+  - id: nigeria_smedan
     type: html
-    name: "Village Capital Africa"
-    funder: "Village Capital"
+    name: "SMEDAN Opportunities"
+    funder: "Small and Medium Enterprises Development Agency of Nigeria"
+    location_scope: "Nigeria"
+    themes: ["startup", "sme", "local government", "business support", "innovation"]
+    url: "https://smedan.gov.ng/"
+    enabled: false
+
+  - id: heva_fund
+    type: html
+    name: "HEVA Fund"
+    funder: "HEVA Fund"
     location_scope: "Africa"
-    themes: ["startup", "accelerator", "investment"]
-    url: "https://vilcap.com"
+    themes: ["creative industries", "creative business", "digital media", "content", "creator economy", "media innovation", "sector"]
+    url: "https://www.hevafund.com/"
     enabled: false

@@ -1,0 +1,46 @@
+country: US
+company_size: startup
+max_days_to_deadline: 180
+
+keywords_include:
+  - startup
+  - small business
+  - SME
+  - innovation
+  - grant
+  - funding
+  - accelerator
+  - SBIR
+  - STTR
+  - federal
+  - research
+  - R&D
+  - feasibility
+  - prototype
+  - pilot
+  - technology
+  - digital
+  - AI
+  - software
+  - cybersecurity
+  - cyber
+  - data
+  - automation
+  - climate
+  - energy
+  - clean tech
+  - manufacturing
+  - health
+  - life sciences
+  - education
+
+keywords_exclude:
+  - procurement
+  - tender
+  - contract opportunity
+  - supply of equipment
+  - construction
+  - real estate
+  - housing
+
+top_n: 6
