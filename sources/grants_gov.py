@@ -42,6 +42,24 @@ def _csv_candidates() -> list[Path]:
     return candidates
 
 
+def _csv_diagnostics() -> None:
+    print("ℹ️ Grants.gov CSV candidates:")
+    for path in _csv_candidates():
+        exists = path.exists()
+        size = path.stat().st_size if exists else 0
+        print(f"   - {path} exists={exists} size={size}")
+        if exists and size > 0:
+            try:
+                with path.open("r", encoding="utf-8-sig", errors="replace") as handle:
+                    first = handle.readline().strip()[:180]
+                if first.startswith("version https://git-lfs.github.com/spec"):
+                    print(f"     ⚠️ {path} is a Git LFS pointer. Enable actions/checkout lfs:true and run git lfs pull.")
+                else:
+                    print(f"     header preview: {first}")
+            except Exception as exc:
+                print(f"     ⚠️ could not read preview: {exc}")
+
+
 def _clean(value: Any) -> str:
     text = unescape(str(value or ""))
     text = re.sub(r"<[^>]+>", " ", text)
@@ -124,18 +142,18 @@ def _extract_rows(payload: Any) -> list[dict]:
 
 
 def _row_to_grant(row: dict) -> dict | None:
-    title = _clean(_first(row, "opportunity_title", "opportunityTitle", "title", "name"))
-    opportunity_id = _clean(_first(row, "opportunity_id", "opportunityId", "id"))
-    opportunity_number = _clean(_first(row, "opportunity_number", "opportunityNumber", "number"))
+    title = _clean(_first(row, "opportunity_title", "opportunityTitle", "title", "name", "Opportunity Title", "Title"))
+    opportunity_id = _clean(_first(row, "opportunity_id", "opportunityId", "id", "Opportunity ID"))
+    opportunity_number = _clean(_first(row, "opportunity_number", "opportunityNumber", "number", "Opportunity Number"))
     if not title or len(title) < 12:
         return None
     if not _is_open(row):
         return None
 
-    agency = _clean(_first(row, "agency_name", "agencyName", "agency", "agency_code", "agencyCode", "top_level_agency_name")) or "U.S. Federal Government"
-    summary = _clean(_first(row, "summary_description", "summary", "description", "opportunity_summary", "opportunitySummary", "funding_category_description"))
-    deadline = _normalize_deadline(_first(row, "close_date", "closeDate", "deadline", "due_date", "dueDate", "forecasted_close_date"))
-    url = _clean(_first(row, "url", "opportunity_url", "opportunityUrl"))
+    agency = _clean(_first(row, "agency_name", "agencyName", "agency", "agency_code", "agencyCode", "top_level_agency_name", "Agency Name", "Agency")) or "U.S. Federal Government"
+    summary = _clean(_first(row, "summary_description", "summary", "description", "opportunity_summary", "opportunitySummary", "funding_category_description", "Summary", "Description"))
+    deadline = _normalize_deadline(_first(row, "close_date", "closeDate", "deadline", "due_date", "dueDate", "forecasted_close_date", "Close Date", "Deadline"))
+    url = _clean(_first(row, "url", "opportunity_url", "opportunityUrl", "URL", "Opportunity URL"))
     url_id = opportunity_id or opportunity_number
     if not url:
         url = f"https://simpler.grants.gov/opportunity/{url_id}" if url_id else "https://simpler.grants.gov/search?utm_source=Grants.gov"
@@ -145,25 +163,31 @@ def _row_to_grant(row: dict) -> dict | None:
         "url": url,
         "summary": summary or f"Federal funding opportunity from {agency}.",
         "deadline_date": deadline,
-        "funding_amount_min": _number(_first(row, "award_floor", "awardFloor")),
-        "funding_amount_max": _number(_first(row, "award_ceiling", "awardCeiling", "estimated_total_program_funding")),
-        "eligibility_notes": _clean(_first(row, "applicant_eligibility_description", "applicant_eligibility", "applicantEligibility", "eligibility", "applicant_types")),
+        "funding_amount_min": _number(_first(row, "award_floor", "awardFloor", "Award Floor")),
+        "funding_amount_max": _number(_first(row, "award_ceiling", "awardCeiling", "estimated_total_program_funding", "Award Ceiling", "Estimated Total Program Funding")),
+        "eligibility_notes": _clean(_first(row, "applicant_eligibility_description", "applicant_eligibility", "applicantEligibility", "eligibility", "applicant_types", "Applicant Eligibility", "Eligibility")),
         "funder": agency,
     }
 
 
 def _load_csv(max_items: int) -> list[dict]:
+    _csv_diagnostics()
     for path in _csv_candidates():
         if not path.exists():
             continue
-        with path.open("r", encoding="utf-8-sig", newline="") as handle:
-            rows = [row for row in csv.DictReader(handle) if _is_open(row)]
+        with path.open("r", encoding="utf-8-sig", newline="", errors="replace") as handle:
+            reader = csv.DictReader(handle)
+            print(f"ℹ️ Grants.gov CSV headers from {path}: {reader.fieldnames}")
+            rows = [row for row in reader if _is_open(row)]
+        print(f"ℹ️ Grants.gov CSV open rows from {path}: {len(rows)}")
         rows.sort(key=_relevance, reverse=True)
         grants: list[dict] = []
         seen: set[str] = set()
+        rejected = 0
         for row in rows:
             grant = _row_to_grant(row)
             if not grant:
+                rejected += 1
                 continue
             key = grant["url"] or grant["title"].lower()
             if key in seen:
@@ -172,6 +196,7 @@ def _load_csv(max_items: int) -> list[dict]:
             seen.add(key)
             if len(grants) >= max_items:
                 break
+        print(f"ℹ️ Grants.gov CSV converted rows from {path}: {len(grants)} accepted, {rejected} rejected before limit")
         if grants:
             print(f"✅ Grants.gov CSV parsed {len(grants)} prioritized opportunities from {path}")
             return grants
