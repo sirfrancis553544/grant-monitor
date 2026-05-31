@@ -6,7 +6,7 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -30,14 +30,8 @@ from store import upsert_grant
 
 DB_PATH = "data/grants.db"
 
-CREATOR_TERMS = {
-    "creator economy", "content creator", "creator", "podcast", "podcaster", "social media", "influencer", "digital media", "media startup", "creator tools", "creator platform", "digital content", "online media", "youtube", "tiktok", "streaming", "audience growth", "media innovation", "creative technology", "creative industries",
-}
-SOURCE_LEVEL_TERMS = {
-    "local": ["local government", "local authority", "council", "city", "county", "municipal", "borough", "mayor", "wirtschaftsförderung", "stadt", "gemeinde", "landkreis"],
-    "regional": ["regional", "state", "scotland", "wales", "northern ireland", "nrw", "bavaria", "baden", "hamburg", "berlin", "hessen", "brandenburg", "interreg", "erdf", "efre"],
-    "national": ["national", "federal", "ministry", "bundesministerium", "kfw", "innovate uk", "ukri", "grants.gov", "sbir", "sttr", "european commission", "eic", "horizon europe"],
-}
+CREATOR_TERMS = {"creator economy", "content creator", "creator", "podcast", "podcaster", "social media", "influencer", "digital media", "media startup", "creator tools", "creator platform", "digital content", "online media", "youtube", "tiktok", "streaming", "audience growth", "media innovation", "creative technology", "creative industries"}
+SOURCE_LEVEL_TERMS = {"local": ["local government", "local authority", "council", "city", "county", "municipal", "borough", "mayor", "wirtschaftsförderung", "stadt", "gemeinde", "landkreis"], "regional": ["regional", "state", "scotland", "wales", "northern ireland", "nrw", "bavaria", "baden", "hamburg", "berlin", "hessen", "brandenburg", "interreg", "erdf", "efre"], "national": ["national", "federal", "ministry", "bundesministerium", "kfw", "innovate uk", "ukri", "grants.gov", "sbir", "sttr", "european commission", "eic", "horizon europe"]}
 
 def canonical_url(u: str | None) -> str | None:
     if not u:
@@ -49,6 +43,13 @@ def load_yaml(path: str) -> Any:
 
 def load_profiles() -> dict[str, dict[str, Any]]:
     return {"DE": load_yaml("profiles/germany_startup.yaml"), "EU": load_yaml("profiles/eu_startup.yaml"), "UK": load_yaml("profiles/uk_startup.yaml"), "AFRICA": load_yaml("profiles/africa_startup.yaml")}
+
+def safe_fetch(source_id: str, fetcher: Callable[[], list[dict] | None]) -> list[dict]:
+    try:
+        return fetcher() or []
+    except Exception as exc:
+        print(f"⚠️ source skipped {source_id}: {exc}")
+        return []
 
 def source_level(g: dict) -> str:
     blob = _text_blob(g)
@@ -237,13 +238,15 @@ def main():
     for s in sources_cfg.get("sources", []):
         if s.get("enabled") is False:
             continue
+        source_id = s.get("id") or s.get("name") or "unknown_source"
         items: list[dict] = []
         if s.get("id") == "berlin_ibb_programs":
-            raw_items = fetch_berlin_ibb_programs(s["url"]) or []
+            raw_items = safe_fetch(source_id, lambda: fetch_berlin_ibb_programs(s["url"]))
             for it in raw_items:
                 g = _base_grant(s, it)
                 if g.get("source") == "berlin_ibb_programs" and g.get("url", "").startswith("https://www.ibb.de/de/foerderprogramme/"):
-                    extra = enrich_berlin_ibb_program(g["url"]) or {}
+                    extra = safe_fetch(f"{source_id}:detail", lambda: [enrich_berlin_ibb_program(g["url"]) or {}])
+                    extra = extra[0] if extra else {}
                     if extra.get("deadline_type") == "rolling":
                         g["deadline_date"] = "rolling"
                     elif extra.get("deadline_date"):
@@ -258,22 +261,22 @@ def main():
                     _ensure_fingerprint(g)
                     items.append(g)
         elif s.get("id") == "tef_entrepreneurship":
-            raw_items = fetch_tef_programme(s["url"], programme_url=s.get("programme_url")) or []
+            raw_items = safe_fetch(source_id, lambda: fetch_tef_programme(s["url"], programme_url=s.get("programme_url")))
             items = [_base_grant(s, it) for it in raw_items]
         elif s.get("id") == "aecf_opportunities":
-            items = [_base_grant(s, it) for it in (fetch_aecf_opportunities(s["url"]) or [])]
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_aecf_opportunities(s["url"]))]
         elif s.get("id") == "eu_funding_tenders_calls":
-            items = [_base_grant(s, it) for it in (fetch_eu_funding_tenders_calls(s["url"]) or [])]
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_eu_funding_tenders_calls(s["url"]))]
         elif s.get("id") == "eic_accelerator":
-            items = [_base_grant(s, it) for it in (fetch_eic_accelerator(s["url"]) or [])]
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_eic_accelerator(s["url"]))]
         elif s.get("id") == "gsma_innovation_fund":
-            items = [_base_grant(s, it) for it in (fetch_gsma_innovation_fund(s["url"]) or [])]
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_gsma_innovation_fund(s["url"]))]
         elif s.get("id") == "innovate_uk_competitions":
-            items = [_base_grant(s, it) for it in (fetch_innovate_uk_competitions(s["url"]) or [])]
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_innovate_uk_competitions(s["url"]))]
         elif s.get("type") == "generic_html":
-            items = [_base_grant(s, it) for it in (fetch_generic_grant_page(s["url"], max_items=int(s.get("max_items", 25))) or [])]
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_generic_grant_page(s["url"], max_items=int(s.get("max_items", 25))))]
         elif s.get("type") == "rss":
-            items = fetch_rss(feed_url=s["url"], source_name=s.get("name") or s.get("id") or "unknown_source", default_funder=s.get("funder") or s.get("name") or s.get("id") or "unknown_funder", location_scope=s.get("location_scope", "DE"), themes=s.get("themes", []))
+            items = safe_fetch(source_id, lambda: fetch_rss(feed_url=s["url"], source_name=s.get("name") or s.get("id") or "unknown_source", default_funder=s.get("funder") or s.get("name") or s.get("id") or "unknown_funder", location_scope=s.get("location_scope", "DE"), themes=s.get("themes", [])))
         for g in items:
             if not (g.get("title") and g.get("url")):
                 continue
