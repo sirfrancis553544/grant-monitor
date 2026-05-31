@@ -43,30 +43,37 @@ def _score_rss_item(title: str, summary: str, themes: list[str]) -> int:
     score = 0
     for term in GOOD_TERMS:
         if term in text:
-            score += 5
+            score += 4
     for term in BAD_TERMS:
         if term in text:
-            score -= 6
+            score -= 3
     if any(term in text for term in ["deadline", "apply", "application", "eligibility"]):
-        score += 8
+        score += 6
     if any(term in text for term in ["call for proposals", "call for applications", "funding opportunity"]):
-        score += 12
+        score += 10
     return score
 
 
 def _keep_rss_item(title: str, summary: str, themes: list[str]) -> bool:
     normalized_title = title.lower().strip()
-    if not normalized_title or len(normalized_title) < 12:
+    if not normalized_title or len(normalized_title) < 8:
         return False
     if normalized_title in HARD_BAD_TITLES:
         return False
-    score = _score_rss_item(title, summary, themes)
+
     text = f" {title} {summary} ".lower()
     has_core_signal = any(term in text for term in [
-        "grant", "funding", "call", "proposal", "application", "competition", "opportunity",
-        "programme", "program", "award", "scheme", "förderung", "zuschuss",
+        "grant", "funding", "fund", "call", "proposal", "application", "competition", "opportunity",
+        "programme", "program", "award", "scheme", "research", "innovation", "förderung", "zuschuss",
     ])
-    return score >= 4 and has_core_signal
+
+    # Match the main scraped-result behavior: only reject obvious noise.
+    # If it has a funding/opportunity signal, keep it even when it also looks like a news/update item.
+    if has_core_signal:
+        return True
+
+    # For broad feeds, keep weak but plausible source-themed items and let the shared quality gate score them later.
+    return _score_rss_item(title, summary, themes) >= 2
 
 
 def fetch_rss(feed_url: str, source_name: str, default_funder: str, location_scope: str, themes: list[str]):
@@ -124,5 +131,5 @@ def fetch_rss(feed_url: str, source_name: str, default_funder: str, location_sco
         })
 
     if skipped:
-        print(f"ℹ️ RSS filtered {skipped} noisy items from {source_name}")
+        print(f"ℹ️ RSS filtered {skipped} obvious noisy items from {source_name}")
     return out
