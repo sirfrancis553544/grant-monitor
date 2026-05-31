@@ -22,6 +22,7 @@ from sources.berlin_ibb_detail import enrich_berlin_ibb_program
 from sources.eic import fetch_eic_accelerator
 from sources.eu_funding_tenders import fetch_eu_funding_tenders_calls
 from sources.generic_page import fetch_generic_grant_page
+from sources.grants_gov import fetch_grants_gov_opportunities
 from sources.gsma import fetch_gsma_innovation_fund
 from sources.innovate_uk import fetch_innovate_uk_competitions
 from sources.rss_source import fetch_rss
@@ -228,7 +229,7 @@ def is_pack_eligible(g: dict, pack: str) -> bool:
     return False
 
 def _base_grant(source_cfg: dict, item: dict) -> dict:
-    return {"title": item.get("title"), "url": item.get("url"), "source": source_cfg.get("id") or source_cfg.get("name") or "unknown_source", "funder": source_cfg.get("funder"), "location_scope": source_cfg.get("location_scope"), "themes": source_cfg.get("themes") or [], "summary": item.get("summary") or "", "eligibility_notes": item.get("eligibility_notes") or "", "deadline_date": item.get("deadline_date"), "funding_amount_min": item.get("funding_amount_min"), "funding_amount_max": item.get("funding_amount_max")}
+    return {"title": item.get("title"), "url": item.get("url"), "source": source_cfg.get("id") or source_cfg.get("name") or "unknown_source", "funder": item.get("funder") or source_cfg.get("funder"), "location_scope": source_cfg.get("location_scope"), "themes": source_cfg.get("themes") or [], "summary": item.get("summary") or "", "eligibility_notes": item.get("eligibility_notes") or "", "deadline_date": item.get("deadline_date"), "funding_amount_min": item.get("funding_amount_min"), "funding_amount_max": item.get("funding_amount_max")}
 
 def _ensure_fingerprint(g: dict) -> None:
     if g.get("fingerprint"):
@@ -280,6 +281,8 @@ def main():
             items = [_base_grant(s, it) for it in raw_items]
         elif s.get("id") == "aecf_opportunities":
             items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_aecf_opportunities(s["url"]))]
+        elif s.get("id") == "grants_gov":
+            items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_grants_gov_opportunities(s.get("url"), max_items=int(s.get("max_items", 50))))]
         elif s.get("id") == "eu_funding_tenders_calls":
             items = [_base_grant(s, it) for it in safe_fetch(source_id, lambda: fetch_eu_funding_tenders_calls(s["url"]))]
         elif s.get("id") == "eic_accelerator":
