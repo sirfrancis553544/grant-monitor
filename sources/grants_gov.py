@@ -20,12 +20,6 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-CSV_CANDIDATES = [
-    Path("data/grants_gov_export.csv"),
-    Path("data/grants-search.csv"),
-    *sorted(Path("data").glob("grants-search-*.csv")) if Path("data").exists() else [],
-]
-
 PRIORITY_TERMS = [
     "small business", "startup", "sme", "sbir", "sttr", "innovation", "innovative",
     "technology", "software", "digital", "artificial intelligence", " ai ", "data",
@@ -38,6 +32,14 @@ LOW_PRIORITY_TERMS = [
     "wildlife", "marine", "fish", "forest", "housing", "homeless", "museum", "library",
     "school district", "infrastructure", "construction", "water", "wastewater",
 ]
+
+
+def _csv_candidates() -> list[Path]:
+    candidates = [Path("data/grants_gov_export.csv"), Path("data/grants-search.csv")]
+    data_dir = Path("data")
+    if data_dir.exists():
+        candidates.extend(sorted(data_dir.glob("grants-search-*.csv")))
+    return candidates
 
 
 def _clean(value: Any) -> str:
@@ -151,10 +153,9 @@ def _row_to_grant(row: dict) -> dict | None:
 
 
 def _load_csv(max_items: int) -> list[dict]:
-    for path in CSV_CANDIDATES:
+    for path in _csv_candidates():
         if not path.exists():
             continue
-        rows: list[dict] = []
         with path.open("r", encoding="utf-8-sig", newline="") as handle:
             rows = [row for row in csv.DictReader(handle) if _is_open(row)]
         rows.sort(key=_relevance, reverse=True)
