@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import csv
+import re
+from datetime import datetime
+from html import unescape
+from pathlib import Path
 from typing import Any
 
 import requests
@@ -16,9 +20,17 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
+CSV_CANDIDATES = [
+    Path("data/grants_gov_export.csv"),
+    Path("data/grants-search.csv"),
+    *sorted(Path("data").glob("grants-search-*.csv")) if Path("data").exists() else [],
+]
+
 
 def _clean(value: Any) -> str:
-    return " ".join(str(value or "").split()).strip()
+    text = unescape(str(value or ""))
+    text = re.sub(r"<[^>]+>", " ", text)
+    return " ".join(text.split()).strip()
 
 
 def _first(row: dict, *keys: str):
@@ -29,9 +41,19 @@ def _first(row: dict, *keys: str):
     return None
 
 
+def _number(value: Any) -> int | None:
+    raw = _clean(value).replace(",", "")
+    if not raw or raw.lower() == "nan":
+        return None
+    try:
+        return int(float(raw))
+    except Exception:
+        return None
+
+
 def _normalize_deadline(value: Any) -> str | None:
     raw = _clean(value)
-    if not raw:
+    if not raw or raw.lower() == "nan":
         return None
     if raw.lower() in {"rolling", "ongoing", "continuous"}:
         return "rolling"
@@ -53,14 +75,7 @@ def _extract_rows(payload: Any) -> list[dict]:
         return [x for x in payload if isinstance(x, dict)]
     if not isinstance(payload, dict):
         return []
-    for path in (
-        ("data", "opportunities"),
-        ("data", "results"),
-        ("data",),
-        ("opportunities",),
-        ("results",),
-        ("items",),
-    ):
+    for path in (("data", "opportunities"), ("data", "results"), ("data",), ("opportunities",), ("results",), ("items",)):
         current: Any = payload
         for key in path:
             if isinstance(current, dict):
@@ -82,25 +97,55 @@ def _row_to_grant(row: dict) -> dict | None:
     if not _is_open(row):
         return None
 
-    agency = _clean(_first(row, "agency_name", "agencyName", "agency", "agency_code", "agencyCode")) or "U.S. Federal Government"
-    summary = _clean(_first(row, "summary", "description", "opportunity_summary", "opportunitySummary"))
-    deadline = _normalize_deadline(_first(row, "close_date", "closeDate", "deadline", "due_date", "dueDate"))
+    agency = _clean(_first(row, "agency_name", "agencyName", "agency", "agency_code", "agencyCode", "top_level_agency_name")) or "U.S. Federal Government"
+    summary = _clean(_first(row, "summary_description", "summary", "description", "opportunity_summary", "opportunitySummary", "funding_category_description"))
+    deadline = _normalize_deadline(_first(row, "close_date", "closeDate", "deadline", "due_date", "dueDate", "forecasted_close_date"))
+    url = _clean(_first(row, "url", "opportunity_url", "opportunityUrl"))
     url_id = opportunity_id or opportunity_number
-    url = f"https://simpler.grants.gov/opportunity/{url_id}" if url_id else "https://simpler.grants.gov/search?utm_source=Grants.gov"
+    if not url:
+        url = f"https://simpler.grants.gov/opportunity/{url_id}" if url_id else "https://simpler.grants.gov/search?utm_source=Grants.gov"
 
     return {
         "title": title,
         "url": url,
         "summary": summary or f"Federal funding opportunity from {agency}.",
         "deadline_date": deadline,
-        "funding_amount_min": None,
-        "funding_amount_max": None,
-        "eligibility_notes": _clean(_first(row, "applicant_eligibility", "applicantEligibility", "eligibility")),
+        "funding_amount_min": _number(_first(row, "award_floor", "awardFloor")),
+        "funding_amount_max": _number(_first(row, "award_ceiling", "awardCeiling", "estimated_total_program_funding")),
+        "eligibility_notes": _clean(_first(row, "applicant_eligibility_description", "applicant_eligibility", "applicantEligibility", "eligibility", "applicant_types")),
         "funder": agency,
     }
 
 
+def _load_csv(max_items: int) -> list[dict]:
+    for path in CSV_CANDIDATES:
+        if not path.exists():
+            continue
+        grants: list[dict] = []
+        seen: set[str] = set()
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                grant = _row_to_grant(row)
+                if not grant:
+                    continue
+                key = grant["url"] or grant["title"].lower()
+                if key in seen:
+                    continue
+                grants.append(grant)
+                seen.add(key)
+                if len(grants) >= max_items:
+                    break
+        if grants:
+            print(f"✅ Grants.gov CSV parsed {len(grants)} opportunities from {path}")
+            return grants
+    return []
+
+
 def fetch_grants_gov_opportunities(url: str | None = None, max_items: int = 50) -> list[dict]:
+    csv_grants = _load_csv(max_items)
+    if csv_grants:
+        return csv_grants
+
     payloads = [
         {"pagination": {"page_offset": 1, "page_size": max_items}, "filters": {"opportunity_statuses": ["posted", "forecasted"]}},
         {"page": 1, "page_size": max_items, "filters": {"status": ["posted", "forecasted"]}},
