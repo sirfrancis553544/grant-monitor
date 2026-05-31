@@ -26,6 +26,19 @@ CSV_CANDIDATES = [
     *sorted(Path("data").glob("grants-search-*.csv")) if Path("data").exists() else [],
 ]
 
+PRIORITY_TERMS = [
+    "small business", "startup", "sme", "sbir", "sttr", "innovation", "innovative",
+    "technology", "software", "digital", "artificial intelligence", " ai ", "data",
+    "cyber", "cybersecurity", "research", "r&d", "commercialization",
+    "prototype", "manufacturing", "climate", "energy", "clean tech", "health",
+]
+
+LOW_PRIORITY_TERMS = [
+    "tribal", "municipal", "county", "state government", "law enforcement", "agriculture",
+    "wildlife", "marine", "fish", "forest", "housing", "homeless", "museum", "library",
+    "school district", "infrastructure", "construction", "water", "wastewater",
+]
+
 
 def _clean(value: Any) -> str:
     text = unescape(str(value or ""))
@@ -68,6 +81,26 @@ def _is_open(row: dict) -> bool:
     if not status:
         return True
     return status in {"posted", "forecasted", "open", "active"}
+
+
+def _text(row: dict) -> str:
+    return " ".join(_clean(v).lower() for v in row.values() if v not in (None, ""))
+
+
+def _relevance(row: dict) -> int:
+    text = f" {_text(row)} "
+    score = 0
+    for term in PRIORITY_TERMS:
+        if term in text:
+            score += 8 if term.strip() in {"sbir", "sttr", "small business", "startup"} else 4
+    for term in LOW_PRIORITY_TERMS:
+        if term in text:
+            score -= 3
+    if _clean(_first(row, "award_ceiling", "awardCeiling", "estimated_total_program_funding")):
+        score += 2
+    if _clean(_first(row, "close_date", "closeDate", "deadline", "due_date", "dueDate", "forecasted_close_date")):
+        score += 2
+    return score
 
 
 def _extract_rows(payload: Any) -> list[dict]:
@@ -121,22 +154,25 @@ def _load_csv(max_items: int) -> list[dict]:
     for path in CSV_CANDIDATES:
         if not path.exists():
             continue
+        rows: list[dict] = []
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = [row for row in csv.DictReader(handle) if _is_open(row)]
+        rows.sort(key=_relevance, reverse=True)
         grants: list[dict] = []
         seen: set[str] = set()
-        with path.open("r", encoding="utf-8-sig", newline="") as handle:
-            for row in csv.DictReader(handle):
-                grant = _row_to_grant(row)
-                if not grant:
-                    continue
-                key = grant["url"] or grant["title"].lower()
-                if key in seen:
-                    continue
-                grants.append(grant)
-                seen.add(key)
-                if len(grants) >= max_items:
-                    break
+        for row in rows:
+            grant = _row_to_grant(row)
+            if not grant:
+                continue
+            key = grant["url"] or grant["title"].lower()
+            if key in seen:
+                continue
+            grants.append(grant)
+            seen.add(key)
+            if len(grants) >= max_items:
+                break
         if grants:
-            print(f"✅ Grants.gov CSV parsed {len(grants)} opportunities from {path}")
+            print(f"✅ Grants.gov CSV parsed {len(grants)} prioritized opportunities from {path}")
             return grants
     return []
 
@@ -162,7 +198,7 @@ def fetch_grants_gov_opportunities(url: str | None = None, max_items: int = 50) 
                 rows = _extract_rows(response.json())
                 grants = []
                 seen = set()
-                for row in rows:
+                for row in sorted(rows, key=_relevance, reverse=True):
                     grant = _row_to_grant(row)
                     if not grant:
                         continue
