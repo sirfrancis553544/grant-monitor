@@ -89,6 +89,14 @@ sources:
     themes: ["startup", "deeptech", "grant", "equity", "creator tools", "digital media", "creative technology", "national"]
     url: "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
 
+  - id: eu_funding_tenders_rss
+    type: rss
+    name: "EU Funding & Tenders RSS"
+    funder: "European Commission"
+    location_scope: "EU"
+    themes: ["grant", "funding", "call", "innovation", "sme", "research", "digital", "technology", "horizon europe", "eic", "national"]
+    url: "https://ec.europa.eu/info/funding-tenders/opportunities/data/referenceData/callupdates-rss.xml"
+
   - id: eu_funding_tenders_calls
     type: html
     name: "EU Funding & Tenders Calls"
@@ -135,6 +143,14 @@ sources:
     location_scope: "UK"
     themes: ["grant", "competition", "r&d", "innovation", "creative technology", "digital media", "creator tools", "national"]
     url: "https://apply-for-innovation-funding.service.gov.uk/competition/search"
+
+  - id: ukri_opportunity_rss
+    type: rss
+    name: "UKRI Opportunity Feed"
+    funder: "UKRI"
+    location_scope: "UK"
+    themes: ["grant", "funding", "research", "innovation", "sme", "technology", "digital", "creative industries", "national"]
+    url: "https://www.ukri.org/opportunity/feed/"
 
   - id: ukri_funding
     type: html
@@ -185,13 +201,13 @@ sources:
   # UNITED STATES
   # ----------------------------
   - id: grants_gov
-    type: generic_html
+    type: custom
     name: "Grants.gov"
     funder: "U.S. Federal Government"
     location_scope: "US"
-    themes: ["grant", "federal", "national", "sme", "research", "innovation"]
-    url: "https://www.grants.gov/search-grants"
-    max_items: 20
+    themes: ["grant", "federal", "national", "sme", "research", "innovation", "startup", "sbir", "sttr", "technology"]
+    url: "https://simpler.grants.gov/search?utm_source=Grants.gov"
+    max_items: 80
 
   - id: sbir_sttr
     type: html
@@ -238,6 +254,14 @@ sources:
     location_scope: "Africa"
     themes: ["tech", "mobile", "startup", "creator tools", "digital content", "social media", "sector"]
     url: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
+
+  - id: afdb_rss
+    type: rss
+    name: "African Development Bank RSS"
+    funder: "African Development Bank"
+    location_scope: "Africa"
+    themes: ["funding", "development", "business", "sme", "innovation", "regional"]
+    url: "https://www.afdb.org/en/news-and-events/adf/rss"
 
   - id: afdb_opportunities
     type: html
