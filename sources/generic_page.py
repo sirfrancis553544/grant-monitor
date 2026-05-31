@@ -6,7 +6,11 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-UA = {"User-Agent": "Mozilla/5.0"}
+UA = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-GB,en;q=0.9",
+}
 GOOD_TERMS = ["grant", "fund", "funding", "finance", "support", "programme", "program", "opportunity", "competition", "apply", "application"]
 BAD_TERMS = ["privacy", "cookie", "terms", "accessibility", "contact", "login", "sign in", "newsletter", "news", "blog", "event", "webinar", "case study"]
 MONEY_RE = re.compile(r"(?:£|€|\$)\s*([\d,]+(?:\.\d+)?)\s*(million|m|k)?", re.IGNORECASE)
@@ -49,8 +53,16 @@ def _looks_relevant(title: str, url: str, text: str) -> bool:
 
 
 def fetch_generic_grant_page(url: str, max_items: int = 25) -> list[dict]:
-    response = requests.get(url, headers=UA, timeout=25)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, headers=UA, timeout=25)
+        if response.status_code in {401, 403, 404, 429}:
+            print(f"⚠️ generic_html skipped {url}: HTTP {response.status_code}")
+            return []
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        print(f"⚠️ generic_html skipped {url}: {exc}")
+        return []
+
     soup = BeautifulSoup(response.text, "lxml")
 
     items: list[dict] = []
