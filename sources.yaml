@@ -42,15 +42,14 @@ sources:
     themes: ["startup", "innovation", "sme", "creative industries", "media startup", "digital media", "creator economy", "regional", "local government"]
     url: "https://www.ibb.de/de/foerderprogramme.html"
 
-  # Regional/local DE source candidates. Kept disabled until parser support is added.
   - id: nrw_bank_foerderprogramme
-    type: html
+    type: generic_html
     name: "NRW.BANK Förderprogramme"
     funder: "NRW.BANK"
     location_scope: "North Rhine-Westphalia"
     themes: ["startup", "sme", "innovation", "digitalisation", "regional", "local government"]
     url: "https://www.nrwbank.de/de/foerderung/foerderprodukte/"
-    enabled: false
+    max_items: 20
 
   - id: l_bank_baden_wuerttemberg
     type: html
@@ -79,15 +78,6 @@ sources:
     url: "https://www.ifbhh.de/foerderprogramm"
     enabled: false
 
-  - id: wirtschaftsfoerderung_berlin
-    type: html
-    name: "Berlin Business Funding"
-    funder: "Berlin Partner / Wirtschaftsförderung Berlin"
-    location_scope: "Berlin"
-    themes: ["startup", "sme", "innovation", "creative industries", "digital media", "local government"]
-    url: "https://www.businesslocationcenter.de/en/business-location/business-support"
-    enabled: false
-
   # ----------------------------
   # EUROPEAN UNION
   # ----------------------------
@@ -109,13 +99,13 @@ sources:
     enabled: false
 
   - id: interreg_programmes
-    type: html
+    type: generic_html
     name: "Interreg Programmes"
     funder: "Interreg / European Regional Development Fund"
     location_scope: "EU"
     themes: ["regional", "cross-border", "innovation", "sme", "digital", "regional development"]
     url: "https://interreg.eu/"
-    enabled: false
+    max_items: 20
 
   - id: erdf_regional_programmes
     type: html
@@ -124,24 +114,6 @@ sources:
     location_scope: "EU"
     themes: ["regional", "local government", "sme", "innovation", "digitalisation", "regional development"]
     url: "https://ec.europa.eu/regional_policy/funding/erdf_en"
-    enabled: false
-
-  - id: eit_funding
-    type: html
-    name: "European Institute of Innovation & Technology"
-    funder: "EIT"
-    location_scope: "EU"
-    themes: ["innovation", "startup", "scaleup", "creative technology", "digital media", "sector"]
-    url: "https://eit.europa.eu/our-activities/opportunities"
-    enabled: false
-
-  - id: cascade_funding_eu
-    type: html
-    name: "EU Cascade Funding"
-    funder: "European Commission / Consortia"
-    location_scope: "EU"
-    themes: ["startup", "innovation", "sme", "digital media", "creator tools", "creative technology", "sector"]
-    url: "https://cascadefunding.eu"
     enabled: false
 
   - id: creative_europe_calls
@@ -174,22 +146,22 @@ sources:
     enabled: false
 
   - id: scottish_enterprise_funding
-    type: html
+    type: generic_html
     name: "Scottish Enterprise Funding"
     funder: "Scottish Enterprise"
     location_scope: "Scotland"
     themes: ["startup", "sme", "innovation", "regional", "local government", "business growth"]
     url: "https://www.scottish-enterprise.com/support-for-businesses/funding-and-grants"
-    enabled: false
+    max_items: 20
 
   - id: business_wales_finance
-    type: html
+    type: generic_html
     name: "Business Wales Finance and Grants"
     funder: "Business Wales"
     location_scope: "Wales"
     themes: ["startup", "sme", "innovation", "regional", "local government", "business support"]
     url: "https://businesswales.gov.wales/finance"
-    enabled: false
+    max_items: 20
 
   - id: invest_ni_support
     type: html
@@ -209,26 +181,17 @@ sources:
     url: "https://www.growlondonlocal.london/"
     enabled: false
 
-  - id: manchester_growth_company
-    type: html
-    name: "Greater Manchester Business Support"
-    funder: "Greater Manchester / Growth Company"
-    location_scope: "Greater Manchester"
-    themes: ["startup", "sme", "innovation", "local government", "regional growth"]
-    url: "https://www.businessgrowthhub.com/"
-    enabled: false
-
   # ----------------------------
   # UNITED STATES
   # ----------------------------
   - id: grants_gov
-    type: html
+    type: generic_html
     name: "Grants.gov"
     funder: "U.S. Federal Government"
     location_scope: "US"
     themes: ["grant", "federal", "national", "sme", "research", "innovation"]
     url: "https://www.grants.gov/search-grants"
-    enabled: false
+    max_items: 20
 
   - id: sbir_sttr
     type: html
@@ -246,15 +209,6 @@ sources:
     location_scope: "California"
     themes: ["startup", "sme", "innovation", "regional", "local government", "business support"]
     url: "https://business.ca.gov/advantages/financial-assistance/"
-    enabled: false
-
-  - id: nyc_business_grants
-    type: html
-    name: "NYC Business Grants and Incentives"
-    funder: "New York City"
-    location_scope: "New York City"
-    themes: ["startup", "sme", "local government", "business support", "innovation"]
-    url: "https://www.nyc.gov/site/sbs/businesses/financing-incentives.page"
     enabled: false
 
   # ----------------------------
